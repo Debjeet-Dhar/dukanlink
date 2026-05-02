@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { createUserProfile, isAdmin as checkIsAdmin } from '../lib/auth';
 
 const AuthContext = createContext(null);
 
@@ -12,17 +13,25 @@ export function AuthProvider({ children }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      setIsAdmin(session?.user ? ADMIN_EMAILS.includes(session.user.email ?? '') : false);
+      if (session?.user) {
+        const adminStatus = await checkIsAdmin();
+        setIsAdmin(adminStatus);
+      }
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      setIsAdmin(session?.user ? ADMIN_EMAILS.includes(session.user.email ?? '') : false);
+      if (session?.user) {
+        const adminStatus = await checkIsAdmin();
+        setIsAdmin(adminStatus);
+      } else {
+        setIsAdmin(false);
+      }
       setLoading(false);
     });
 
@@ -30,13 +39,32 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signUp = useCallback(async (email, password) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    return { error: error?.message ?? null };
+    try {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
+
+      if (data.user) {
+        try {
+          await createUserProfile(data.user.id, ADMIN_EMAILS.includes(email));
+        } catch (profileError) {
+          console.error('Failed to create user profile:', profileError);
+        }
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error: error?.message ?? 'Sign up failed' };
+    }
   }, []);
 
   const signIn = useCallback(async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      return { error: null };
+    } catch (error) {
+      return { error: error?.message ?? 'Sign in failed' };
+    }
   }, []);
 
   const signOut = useCallback(async () => {

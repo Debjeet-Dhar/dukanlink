@@ -1,20 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { Modal } from '../components/UI';
 import { Search, Store, Crown, Shield, AlertTriangle, Ban, Check, Package, ChevronRight, Eye, Loader2 } from '../components/Icons';
+import { isAdmin } from '../lib/auth';
 
 export default function Admin() {
   const { adminShops, refreshAdminShops, updateAdminShopStatus } = useApp();
+  const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [planFilter, setPlanFilter] = useState('all');
   const [selectedShop, setSelectedShop] = useState(null);
   const [actionModal, setActionModal] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isAdminUser, setIsAdminUser] = useState(false);
 
   useEffect(() => {
-    refreshAdminShops().then(() => setLoading(false));
-  }, [refreshAdminShops]);
+    async function checkAdmin() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+      const adminStatus = await isAdmin();
+      setIsAdminUser(adminStatus);
+      if (adminStatus) {
+        await refreshAdminShops();
+      }
+      setLoading(false);
+    }
+    checkAdmin();
+  }, [user, refreshAdminShops]);
 
   const filtered = adminShops.filter(shop => {
     const matchesSearch = shop.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -57,6 +73,16 @@ export default function Admin() {
 
   if (loading) {
     return <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary-600" /></div>;
+  }
+
+  if (!isAdminUser) {
+    return (
+      <div className="page-enter flex flex-col items-center justify-center py-20 text-center">
+        <Shield className="w-12 h-12 text-surface-300 mb-4" />
+        <h2 className="text-xl font-bold text-surface-900 mb-2">Access Denied</h2>
+        <p className="text-surface-500">You don't have permission to access the admin panel</p>
+      </div>
+    );
   }
 
   return (

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { handleSupabaseError } from '../lib/errorHandler';
 
 const FREE_PRODUCT_LIMIT = 15;
 
@@ -22,26 +23,31 @@ export function AppProvider({ children }) {
   const refreshShop = useCallback(async () => {
     if (!user) { setShop(null); setShopLoading(false); return; }
     setShopLoading(true);
-    const { data, error } = await supabase
-      .from('shops')
-      .select('*')
-      .eq('owner_id', user.id)
-      .maybeSingle();
-    if (error) { setShopLoading(false); return; }
-    if (data) {
-      setShop({
-        id: data.id,
-        name: data.name,
-        city: data.city || '',
-        whatsapp: data.whatsapp || '',
-        description: data.description || '',
-        slug: data.slug,
-        banner: data.banner || defaultShopImages.banner,
-        logo: data.logo || defaultShopImages.logo,
-        plan: data.plan,
-        status: data.status,
-      });
-    } else {
+    try {
+      const { data, error } = await supabase
+        .from('shops')
+        .select('*')
+        .eq('owner_id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) {
+        setShop({
+          id: data.id,
+          name: data.name,
+          city: data.city || '',
+          whatsapp: data.whatsapp || '',
+          description: data.description || '',
+          slug: data.slug,
+          banner: data.banner || defaultShopImages.banner,
+          logo: data.logo || defaultShopImages.logo,
+          plan: data.plan,
+          status: data.status,
+        });
+      } else {
+        setShop(null);
+      }
+    } catch (error) {
+      console.error(handleSupabaseError(error, 'refreshShop'));
       setShop(null);
     }
     setShopLoading(false);
@@ -50,21 +56,26 @@ export function AppProvider({ children }) {
   const refreshProducts = useCallback(async () => {
     if (!shop?.id) { setProducts([]); setProductsLoading(false); return; }
     setProductsLoading(true);
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('shop_id', shop.id)
-      .order('created_at', { ascending: false });
-    if (error) { setProductsLoading(false); return; }
-    setProducts((data || []).map((p) => ({
-      id: p.id,
-      name: p.name,
-      price: Number(p.price),
-      image: p.image || '',
-      description: p.description || '',
-      category: p.category || '',
-      tags: p.tags || [],
-    })));
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('shop_id', shop.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setProducts((data || []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        price: Number(p.price),
+        image: p.image || '',
+        description: p.description || '',
+        category: p.category || '',
+        tags: p.tags || [],
+      })));
+    } catch (error) {
+      console.error(handleSupabaseError(error, 'refreshProducts'));
+      setProducts([]);
+    }
     setProductsLoading(false);
   }, [shop?.id]);
 
