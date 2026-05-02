@@ -137,40 +137,58 @@ export default function Landing({ onGetStarted, onDemo }) {
       </nav>
 
       {/* HERO */}
-      <section className="relative pt-32 pb-24 sm:pt-40 sm:pb-32 lg:pt-48 lg:pb-40 overflow-hidden bg-surface-50">
+      <section className="relative pt-28 pb-16 sm:pt-40 sm:pb-32 lg:pt-48 lg:pb-40 overflow-hidden bg-surface-50">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-surface-50 to-surface-50" />
         <div className="absolute top-10 -left-40 w-[600px] h-[600px] bg-primary-100/30 rounded-full blur-3xl" />
         <div className="absolute -bottom-20 -right-40 w-[600px] h-[600px] bg-primary-100/20 rounded-full blur-3xl" />
 
-        <div className="relative max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative max-w-2xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
           <FadeIn>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[1.1] tracking-tight text-surface-900 mb-4">
-              Turn Your WhatsApp Selling Into a Real Online Shop in{' '}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-50 border border-primary-200 rounded-full text-primary-700 text-xs font-semibold mb-6 sm:mb-8">
+              <Zap className="w-3.5 h-3.5" />
+              Free to start — No credit card needed
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={50}>
+            <h1 className="text-[2rem] sm:text-5xl lg:text-7xl font-extrabold leading-[1.15] sm:leading-[1.1] tracking-tight text-surface-900 mb-4">
+              Open Your Online Shop in{' '}
               <span className="text-primary-500">2 Minutes</span>
             </h1>
           </FadeIn>
 
           <FadeIn delay={100}>
-            <p className="text-lg sm:text-xl text-surface-600 leading-relaxed mt-6 mb-10">
-              Stop losing orders in chats. Create your own shop link and receive clean, organized orders directly on WhatsApp.
+            <p className="text-base sm:text-lg lg:text-xl text-surface-500 leading-relaxed mt-4 sm:mt-6 mb-8 sm:mb-10 max-w-lg mx-auto">
+              Stop losing orders in chats. Get your own shop link and receive orders directly on WhatsApp.
             </p>
           </FadeIn>
 
           <FadeIn delay={200}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8">
               <button
                 onClick={onGetStarted}
-                className="px-8 py-4 bg-primary-500 text-white font-bold text-lg rounded-full hover:bg-primary-600 hover:shadow-elevated transition-all active:scale-[0.98] shadow-soft w-full sm:w-auto"
+                className="px-6 sm:px-8 py-3.5 sm:py-4 bg-primary-500 text-white font-bold text-base sm:text-lg rounded-full hover:bg-primary-600 hover:shadow-elevated transition-all active:scale-[0.98] shadow-soft w-full sm:w-auto"
               >
-                Get Early Access (Free)
+                Get Early Access — Free
               </button>
               <button
                 onClick={onDemo}
-                className="px-8 py-4 bg-white text-surface-900 font-semibold text-lg rounded-full border-2 border-surface-300 hover:border-surface-400 hover:shadow-soft transition-all active:scale-[0.98] w-full sm:w-auto"
+                className="px-6 sm:px-8 py-3.5 sm:py-4 bg-white text-surface-900 font-semibold text-base sm:text-lg rounded-full border-2 border-surface-300 hover:border-surface-400 hover:shadow-soft transition-all active:scale-[0.98] w-full sm:w-auto"
               >
                 View Live Demo
               </button>
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={300}>
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs sm:text-sm text-surface-400 font-medium">
+              {trustItems.map((item, i) => (
+                <span key={i} className="flex items-center gap-1.5">
+                  {item.icon}
+                  {item.text}
+                </span>
+              ))}
             </div>
           </FadeIn>
         </div>
