@@ -19,9 +19,10 @@ export function AppProvider({ children }) {
   const [adminShops, setAdminShops] = useState([]);
   const [shopLoading, setShopLoading] = useState(true);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [actionError, setActionError] = useState(null);
 
   const refreshShop = useCallback(async () => {
-    if (!user) { setShop(null); setShopLoading(false); return; }
+    if (!user || !supabase) { setShop(null); setShopLoading(false); return; }
     setShopLoading(true);
     try {
       const { data, error } = await supabase
@@ -54,7 +55,7 @@ export function AppProvider({ children }) {
   }, [user]);
 
   const refreshProducts = useCallback(async () => {
-    if (!shop?.id) { setProducts([]); setProductsLoading(false); return; }
+    if (!shop?.id || !supabase) { setProducts([]); setProductsLoading(false); return; }
     setProductsLoading(true);
     try {
       const { data, error } = await supabase
@@ -80,39 +81,45 @@ export function AppProvider({ children }) {
   }, [shop?.id]);
 
   const refreshAdminShops = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('shops')
-      .select('id, name, slug, city, whatsapp, plan, status, created_at');
-    if (error || !data) return;
+    if (!supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from('shops')
+        .select('id, name, slug, city, whatsapp, plan, status, created_at');
+      if (error || !data) return;
 
-    const shopsWithCounts = await Promise.all(
-      data.map(async (s) => {
-        const { count } = await supabase
-          .from('products')
-          .select('*', { count: 'exact', head: true })
-          .eq('shop_id', s.id);
-        return {
-          id: s.id,
-          name: s.name,
-          slug: s.slug,
-          owner: 'Owner',
-          ownerPhone: s.whatsapp || '',
-          city: s.city || '',
-          plan: s.plan || 'free',
-          productCount: count || 0,
-          createdAt: s.created_at,
-          status: s.status || 'active',
-        };
-      })
-    );
-    setAdminShops(shopsWithCounts);
+      const shopsWithCounts = await Promise.all(
+        data.map(async (s) => {
+          const { count } = await supabase
+            .from('products')
+            .select('*', { count: 'exact', head: true })
+            .eq('shop_id', s.id);
+          return {
+            id: s.id,
+            name: s.name,
+            slug: s.slug,
+            owner: 'Owner',
+            ownerPhone: s.whatsapp || '',
+            city: s.city || '',
+            plan: s.plan || 'free',
+            productCount: count || 0,
+            createdAt: s.created_at,
+            status: s.status || 'active',
+          };
+        })
+      );
+      setAdminShops(shopsWithCounts);
+    } catch (error) {
+      console.error(handleSupabaseError(error, 'refreshAdminShops'));
+    }
   }, []);
 
   useEffect(() => { refreshShop(); }, [refreshShop]);
   useEffect(() => { refreshProducts(); }, [refreshProducts]);
 
   const updateShop = useCallback(async (data) => {
-    if (!shop?.id) return;
+    if (!shop?.id || !supabase) return;
+    setActionError(null);
     const updateData = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.city !== undefined) updateData.city = data.city;
@@ -127,11 +134,16 @@ export function AppProvider({ children }) {
       .from('shops')
       .update(updateData)
       .eq('id', shop.id);
-    if (!error) await refreshShop();
+    if (error) {
+      setActionError(handleSupabaseError(error, 'updateShop'));
+    } else {
+      await refreshShop();
+    }
   }, [shop?.id, refreshShop]);
 
   const addProduct = useCallback(async (product) => {
-    if (!shop?.id) return;
+    if (!shop?.id || !supabase) return;
+    setActionError(null);
     const { error } = await supabase
       .from('products')
       .insert({
@@ -143,10 +155,16 @@ export function AppProvider({ children }) {
         category: product.category,
         tags: product.tags,
       });
-    if (!error) await refreshProducts();
+    if (error) {
+      setActionError(handleSupabaseError(error, 'addProduct'));
+    } else {
+      await refreshProducts();
+    }
   }, [shop?.id, refreshProducts]);
 
   const updateProduct = useCallback(async (id, data) => {
+    if (!supabase) return;
+    setActionError(null);
     const updateData = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.price !== undefined) updateData.price = data.price;
@@ -159,15 +177,25 @@ export function AppProvider({ children }) {
       .from('products')
       .update(updateData)
       .eq('id', id);
-    if (!error) await refreshProducts();
+    if (error) {
+      setActionError(handleSupabaseError(error, 'updateProduct'));
+    } else {
+      await refreshProducts();
+    }
   }, [refreshProducts]);
 
   const deleteProduct = useCallback(async (id) => {
+    if (!supabase) return;
+    setActionError(null);
     const { error } = await supabase
       .from('products')
       .delete()
       .eq('id', id);
-    if (!error) await refreshProducts();
+    if (error) {
+      setActionError(handleSupabaseError(error, 'deleteProduct'));
+    } else {
+      await refreshProducts();
+    }
   }, [refreshProducts]);
 
   const upgradePlan = useCallback(async () => {
@@ -175,7 +203,7 @@ export function AppProvider({ children }) {
   }, [updateShop]);
 
   const isSlugAvailable = useCallback(async (slug) => {
-    if (!slug || slug.length < 3) return false;
+    if (!slug || slug.length < 3 || !supabase) return false;
     if (slug === shop?.slug) return true;
     const { data, error } = await supabase
       .from('shops')
@@ -192,12 +220,15 @@ export function AppProvider({ children }) {
   }, [shop?.plan, products.length]);
 
   const updateAdminShopStatus = useCallback(async (id, status) => {
+    if (!supabase) return;
     const { error } = await supabase
       .from('shops')
       .update({ status })
       .eq('id', id);
     if (!error) await refreshAdminShops();
   }, [refreshAdminShops]);
+
+  const clearActionError = useCallback(() => setActionError(null), []);
 
   return (
     <AppContext.Provider value={{
@@ -206,6 +237,7 @@ export function AppProvider({ children }) {
       adminShops,
       shopLoading,
       productsLoading,
+      actionError,
       updateShop,
       addProduct,
       updateProduct,
@@ -217,6 +249,7 @@ export function AppProvider({ children }) {
       refreshProducts,
       refreshAdminShops,
       updateAdminShopStatus,
+      clearActionError,
       FREE_PRODUCT_LIMIT,
     }}>
       {children}

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { createUserProfile, isAdmin as checkIsAdmin } from '../lib/auth';
+import { createUserProfile, isAdmin as checkIsAdmin, checkIfAnyAdminExists } from '../lib/auth';
 
 const AuthContext = createContext(null);
 
@@ -11,26 +11,61 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [emailConfirmed, setEmailConfirmed] = useState(false);
+
+  const ensureUserProfile = async (userId, email) => {
+    try {
+      const { data: existing } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (existing) return;
+
+      const adminExists = await checkIfAnyAdminExists();
+      const shouldBeAdmin = !adminExists && ADMIN_EMAILS.includes(email?.toLowerCase());
+      await createUserProfile(userId, shouldBeAdmin);
+    } catch (err) {
+      if (!err.message?.includes('duplicate') && !err.code !== '23505') {
+        console.error('Profile creation error:', err);
+      }
+    }
+  };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setEmailConfirmed(!!session?.user?.email_confirmed_at);
       if (session?.user) {
-        const adminStatus = await checkIsAdmin();
-        setIsAdmin(adminStatus);
+        (async () => {
+          await ensureUserProfile(session.user.id, session.user.email);
+          const adminStatus = await checkIsAdmin();
+          setIsAdmin(adminStatus);
+        })();
       }
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setEmailConfirmed(!!session?.user?.email_confirmed_at);
       if (session?.user) {
-        const adminStatus = await checkIsAdmin();
-        setIsAdmin(adminStatus);
+        (async () => {
+          await ensureUserProfile(session.user.id, session.user.email);
+          const adminStatus = await checkIsAdmin();
+          setIsAdmin(adminStatus);
+        })();
       } else {
         setIsAdmin(false);
+        setEmailConfirmed(false);
       }
       setLoading(false);
     });
@@ -40,30 +75,69 @@ export function AuthProvider({ children }) {
 
   const signUp = useCallback(async (email, password) => {
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}`,
+        },
+      });
       if (error) throw error;
 
-      if (data.user) {
-        try {
-          await createUserProfile(data.user.id, ADMIN_EMAILS.includes(email));
-        } catch (profileError) {
-          console.error('Failed to create user profile:', profileError);
-        }
+      if (data.user && data.user.email_confirmed_at) {
+        await ensureUserProfile(data.user.id, email);
       }
 
-      return { error: null };
+      return { error: null, needsConfirmation: !data.user?.email_confirmed_at && !data.session };
     } catch (error) {
-      return { error: error?.message ?? 'Sign up failed' };
+      return { error: error?.message ?? 'Sign up failed', needsConfirmation: false };
     }
   }, []);
 
   const signIn = useCallback(async (email, password) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+
+      if (data.user && !data.user.email_confirmed_at) {
+        await supabase.auth.signOut();
+        return { error: 'Please verify your email before signing in. Check your inbox.', needsConfirmation: true };
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error: error?.message ?? 'Sign in failed', needsConfirmation: false };
+    }
+  }, []);
+
+  const signInWithGoogle = useCallback(async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}`,
+        },
+      });
       if (error) throw error;
       return { error: null };
     } catch (error) {
-      return { error: error?.message ?? 'Sign in failed' };
+      return { error: error?.message ?? 'Google sign in failed' };
+    }
+  }, []);
+
+  const resendConfirmation = useCallback(async (email) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}`,
+        },
+      });
+      if (error) throw error;
+      return { error: null };
+    } catch (error) {
+      return { error: error?.message ?? 'Failed to resend confirmation' };
     }
   }, []);
 
@@ -72,10 +146,14 @@ export function AuthProvider({ children }) {
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+    setEmailConfirmed(false);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{
+      user, session, loading, isAdmin, emailConfirmed,
+      signUp, signIn, signInWithGoogle, resendConfirmation, signOut,
+    }}>
       {children}
     </AuthContext.Provider>
   );

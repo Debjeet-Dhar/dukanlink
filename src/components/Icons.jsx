@@ -39,6 +39,7 @@ import {
   Ban,
   Users,
   MoreHorizontal,
+  Mail,
 } from 'lucide-react';
 
 export {
@@ -82,4 +83,5 @@ export {
   Ban,
   Users,
   MoreHorizontal,
+  Mail,
 };

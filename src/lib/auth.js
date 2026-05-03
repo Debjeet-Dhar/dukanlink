@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 
 export async function isAdmin() {
   try {
+    if (!supabase) return false;
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
@@ -25,6 +26,7 @@ export async function isAdmin() {
 
 export async function getCurrentUser() {
   try {
+    if (!supabase) return null;
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error) {
       console.error('Get user failed:', error);
@@ -39,6 +41,7 @@ export async function getCurrentUser() {
 
 export async function getUserProfile(userId) {
   try {
+    if (!supabase) return null;
     const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
@@ -53,8 +56,27 @@ export async function getUserProfile(userId) {
   }
 }
 
+export async function checkIfAnyAdminExists() {
+  try {
+    if (!supabase) return false;
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('is_admin', true)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) return false;
+    return !!data;
+  } catch {
+    return false;
+  }
+}
+
 export async function createUserProfile(userId, isAdmin = false) {
   try {
+    if (!supabase) throw new Error('Supabase not configured');
+
     const { data, error } = await supabase
       .from('user_profiles')
       .insert([{ id: userId, is_admin: isAdmin }])
@@ -71,6 +93,7 @@ export async function createUserProfile(userId, isAdmin = false) {
 
 export async function setAdminStatus(userId, isAdmin) {
   try {
+    if (!supabase) throw new Error('Supabase not configured');
     const { data, error } = await supabase
       .from('user_profiles')
       .update({ is_admin: isAdmin })
