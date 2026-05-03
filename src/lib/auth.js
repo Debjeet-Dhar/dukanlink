@@ -80,11 +80,9 @@ export async function createUserProfile(userId, isAdmin = false) {
   // with false. Regular users use ignoreDuplicates so we never overwrite is_admin
   // on later logins (ensureUserProfile passes isAdmin false when any admin exists).
   if (isAdmin) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('user_profiles')
-      .upsert([{ id: userId, is_admin: true }], { onConflict: 'id' })
-      .select()
-      .maybeSingle();
+      .upsert([{ id: userId, is_admin: true }], { onConflict: 'id' });
 
     if (error) {
       if (error.code === '23505') {
@@ -93,17 +91,15 @@ export async function createUserProfile(userId, isAdmin = false) {
       console.error('Create user profile failed:', error);
       throw error;
     }
-    return data ?? (await getUserProfile(userId));
+    return getUserProfile(userId);
   }
 
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('user_profiles')
     .upsert([{ id: userId, is_admin: false }], {
       onConflict: 'id',
       ignoreDuplicates: true,
-    })
-    .select()
-    .maybeSingle();
+    });
 
   if (error) {
     if (error.code === '23505') {
@@ -113,7 +109,7 @@ export async function createUserProfile(userId, isAdmin = false) {
     throw error;
   }
 
-  return data ?? (await getUserProfile(userId));
+  return getUserProfile(userId);
 }
 
 export async function setAdminStatus(userId, isAdmin) {
