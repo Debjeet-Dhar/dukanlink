@@ -12,6 +12,7 @@ export default function ShopPreview() {
   useEffect(() => {
     async function fetchPublicShop() {
       if (!contextShop?.slug) { setLoading(false); return; }
+      if (!supabase) { setLoading(false); return; }
       const { data: shopData } = await supabase
         .from('shops')
         .select('*')
@@ -47,7 +48,8 @@ export default function ShopPreview() {
   }, [contextShop?.slug]);
 
   const shop = publicShop || contextShop;
-  const products = publicProducts.length > 0 ? publicProducts : contextProducts;
+  // After DB fetch, use server product list even when empty (avoid showing stale context products).
+  const products = publicShop ? publicProducts : contextProducts;
 
   const handleOrder = (productName) => {
     if (!shop) return;

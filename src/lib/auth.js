@@ -74,21 +74,46 @@ export async function checkIfAnyAdminExists() {
 }
 
 export async function createUserProfile(userId, isAdmin = false) {
-  try {
-    if (!supabase) throw new Error('Supabase not configured');
+  if (!supabase) throw new Error('Supabase not configured');
 
+  // First admin must be able to set is_admin true even if a row was already inserted
+  // with false. Regular users use ignoreDuplicates so we never overwrite is_admin
+  // on later logins (ensureUserProfile passes isAdmin false when any admin exists).
+  if (isAdmin) {
     const { data, error } = await supabase
       .from('user_profiles')
-      .insert([{ id: userId, is_admin: isAdmin }])
+      .upsert([{ id: userId, is_admin: true }], { onConflict: 'id' })
       .select()
-      .single();
+      .maybeSingle();
 
-    if (error) throw error;
-    return data;
-  } catch (error) {
+    if (error) {
+      if (error.code === '23505') {
+        return getUserProfile(userId);
+      }
+      console.error('Create user profile failed:', error);
+      throw error;
+    }
+    return data ?? (await getUserProfile(userId));
+  }
+
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .upsert([{ id: userId, is_admin: false }], {
+      onConflict: 'id',
+      ignoreDuplicates: true,
+    })
+    .select()
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === '23505') {
+      return getUserProfile(userId);
+    }
     console.error('Create user profile failed:', error);
     throw error;
   }
+
+  return data ?? (await getUserProfile(userId));
 }
 
 export async function setAdminStatus(userId, isAdmin) {

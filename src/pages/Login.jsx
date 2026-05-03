@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { isSupabaseConfigured } from '../lib/supabase';
 import { ChevronRight, Loader2, MessageCircle, Mail, ArrowLeft } from '../components/Icons';
 
 function GoogleIcon({ className }) {
@@ -14,7 +16,17 @@ function GoogleIcon({ className }) {
 }
 
 export default function Login({ onBack }) {
-  const { signIn, signUp, signInWithGoogle, resendConfirmation } = useAuth();
+  const { user, loading: authLoading, signIn, signUp, signInWithGoogle, resendConfirmation } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (authLoading || !user) return;
+    const next = searchParams.get('next');
+    const safe =
+      next && next.startsWith('/') && !next.startsWith('//') ? next : null;
+    navigate(safe || '/dashboard', { replace: true });
+  }, [user, authLoading, navigate, searchParams]);
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -65,8 +77,10 @@ export default function Login({ onBack }) {
   const handleResend = async () => {
     setResendLoading(true);
     setResendSuccess(false);
+    setError('');
     const { error: err } = await resendConfirmation(email.trim());
-    if (!err) setResendSuccess(true);
+    if (err) setError(err);
+    else setResendSuccess(true);
     setResendLoading(false);
   };
 
@@ -121,6 +135,12 @@ export default function Login({ onBack }) {
                   </div>
                 )}
 
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
+                    <p className="text-sm text-red-600 font-medium">{error}</p>
+                  </div>
+                )}
+
                 <button
                   onClick={handleResend}
                   disabled={resendLoading}
@@ -166,6 +186,12 @@ export default function Login({ onBack }) {
 
       <main className="relative flex-1 flex items-start sm:items-center justify-center px-4 sm:px-6 pb-16">
         <div className="w-full max-w-md">
+          {!isSupabaseConfigured && (
+            <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-950 text-sm leading-snug">
+              <p className="font-semibold mb-1">Connect Supabase to sign in</p>
+              <p>Copy <code className="text-xs bg-amber-100/80 px-1 rounded">.env.example</code> to <code className="text-xs bg-amber-100/80 px-1 rounded">.env</code>, add your project URL and anon key from Supabase → Settings → API, then restart <code className="text-xs bg-amber-100/80 px-1 rounded">npm run dev</code>.</p>
+            </div>
+          )}
           <div className="bg-white rounded-2xl shadow-elevated border border-surface-200/60 overflow-hidden">
             <div className="bg-gradient-to-br from-primary-50 to-primary-100/40 border-b border-primary-100/80 p-6 flex items-start gap-4">
               <div className="w-12 h-12 rounded-2xl bg-primary-600 text-white flex items-center justify-center shadow-md shadow-primary-600/30 shrink-0">

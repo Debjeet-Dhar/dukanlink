@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
@@ -11,6 +12,7 @@ function generateSlug(name) {
 export default function Onboarding() {
   const { user } = useAuth();
   const { refreshShop } = useApp();
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -33,6 +35,10 @@ export default function Onboarding() {
 
   const handleSubmit = async () => {
     if (!validate() || !user) return;
+    if (!supabase) {
+      setSlugError('Supabase is not configured. Add .env with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server.');
+      return;
+    }
     setSlugError('');
     setLoading(true);
 
@@ -84,6 +90,7 @@ export default function Onboarding() {
 
     await refreshShop();
     setLoading(false);
+    navigate('/dashboard', { replace: true });
   };
 
   return (

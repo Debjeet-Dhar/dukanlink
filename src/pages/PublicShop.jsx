@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { MapPin, MessageCircle, Phone, Loader2, ArrowLeft } from '../components/Icons';
 
 export default function PublicShop() {
@@ -12,6 +12,7 @@ export default function PublicShop() {
   useEffect(() => {
     async function fetchShop() {
       if (!slug) { setLoading(false); return; }
+      if (!supabase) { setLoading(false); return; }
 
       const { data: shopData } = await supabase
         .from('shops')
@@ -65,6 +66,22 @@ export default function PublicShop() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-50">
         <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+      </div>
+    );
+  }
+
+  if (!isSupabaseConfigured) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-50 px-4">
+        <div className="max-w-md text-center">
+          <h2 className="text-xl font-bold text-surface-900 mb-2">Database not configured</h2>
+          <p className="text-surface-600 text-sm leading-relaxed mb-6">
+            Add <span className="font-mono text-xs">VITE_SUPABASE_URL</span> and <span className="font-mono text-xs">VITE_SUPABASE_ANON_KEY</span> to a <span className="font-mono text-xs">.env</span> file (see <span className="font-mono text-xs">.env.example</span>), then restart the dev server.
+          </p>
+          <Link to="/" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all">
+            <ArrowLeft className="w-4 h-4" /> Go Home
+          </Link>
+        </div>
       </div>
     );
   }

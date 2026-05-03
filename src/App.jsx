@@ -8,7 +8,6 @@ import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Settings from './pages/Settings';
-import ShopPreview from './pages/ShopPreview';
 import DemoShop from './pages/DemoShop';
 import Admin from './pages/Admin';
 import PublicShop from './pages/PublicShop';
@@ -35,6 +34,10 @@ function AuthLayout() {
 
   if (!shop && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  if (shop && location.pathname === '/onboarding') {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <Outlet />;

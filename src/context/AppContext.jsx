@@ -142,7 +142,7 @@ export function AppProvider({ children }) {
   }, [shop?.id, refreshShop]);
 
   const addProduct = useCallback(async (product) => {
-    if (!shop?.id || !supabase) return;
+    if (!shop?.id || !supabase) return false;
     setActionError(null);
     const { error } = await supabase
       .from('products')
@@ -157,13 +157,14 @@ export function AppProvider({ children }) {
       });
     if (error) {
       setActionError(handleSupabaseError(error, 'addProduct'));
-    } else {
-      await refreshProducts();
+      return false;
     }
+    await refreshProducts();
+    return true;
   }, [shop?.id, refreshProducts]);
 
   const updateProduct = useCallback(async (id, data) => {
-    if (!supabase) return;
+    if (!supabase) return false;
     setActionError(null);
     const updateData = {};
     if (data.name !== undefined) updateData.name = data.name;
@@ -179,9 +180,10 @@ export function AppProvider({ children }) {
       .eq('id', id);
     if (error) {
       setActionError(handleSupabaseError(error, 'updateProduct'));
-    } else {
-      await refreshProducts();
+      return false;
     }
+    await refreshProducts();
+    return true;
   }, [refreshProducts]);
 
   const deleteProduct = useCallback(async (id) => {

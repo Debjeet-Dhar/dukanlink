@@ -36,6 +36,7 @@ DukanLink lets anyone create an online shop in 60 seconds. Shop owners add produ
 and customers browse and order via WhatsApp. It is built for small businesses in India.
 
 Features:
+
 - Create your shop with name, city, WhatsApp number
 - Add products with images, prices, categories
 - Customers see your shop at dukanlink.in/your-shop-name
@@ -97,11 +98,13 @@ You need two secret values that connect your app to Supabase.
 4. You will see two important values:
 
    **Project URL** -- looks like this:
+
    ```
    https://xkqwmtpfgr.supabase.co
    ```
 
    **anon public key** -- looks like this (very long):
+
    ```
    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6...
    ```
@@ -321,6 +324,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
 Example of what it should look like (YOUR values will be different):
+
 ```
 VITE_SUPABASE_URL=https://xkqwmtpfgr.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6...
@@ -441,6 +445,7 @@ npm run dev
 ```
 
 4. You will see something like:
+
 ```
   VITE v5.4.8  ready in 500 ms
 
@@ -463,6 +468,7 @@ This is the most important step. The FIRST account you create becomes the admin.
 ### Option A: Use the Admin Email (Recommended)
 
 The app is configured so that these emails automatically get admin access:
+
 - `admin@dukanlink.com`
 - `admin@dukkanlink.in`
 
@@ -494,40 +500,47 @@ can promote other users by running SQL in the Supabase dashboard.
 ## Step 10: Test Everything
 
 ### Test 1: Sign Up Flow
+
 1. Sign up with a new email (not your admin email)
 2. You should see "Check your email" screen
 3. Check email inbox, click the verification link
 4. Come back and sign in -- it should work
 
 ### Test 2: Google Sign In
+
 1. Click "Continue with Google"
 2. Pick your Google account
 3. You should be signed in automatically
 
 ### Test 3: Create a Shop
+
 1. After signing in, fill in the onboarding form
 2. Enter shop name, city, WhatsApp number
 3. Click "Create My Shop"
 4. You should see the Dashboard
 
 ### Test 4: Add Products
+
 1. Go to the Products page
 2. Click "Add Product"
 3. Fill in name, price, description
 4. Save it -- it should appear in the list
 
 ### Test 5: View Public Shop
+
 1. Click "Preview" in the top bar
 2. Your shop should open in a new tab
 3. Anyone can see this page (no login needed)
 
 ### Test 6: Admin Panel
+
 1. Sign in with your admin account
 2. Click "Admin" in the sidebar
 3. You should see all shops and stats
 4. Try flagging or suspending a shop
 
 ### Test 7: Non-Admin Cannot Access Admin
+
 1. Sign in with a regular (non-admin) account
 2. Try to go to /admin
 3. You should see "Access Denied"
@@ -539,18 +552,23 @@ can promote other users by running SQL in the Supabase dashboard.
 The admin system has 3 layers of protection:
 
 ### Layer 1: Code Level
+
 The app checks `ADMIN_EMAILS` list in `AuthContext.jsx`:
+
 ```javascript
-const ADMIN_EMAILS = ['admin@dukanlink.com', 'admin@dukkanlink.in'];
+const ADMIN_EMAILS = ["admin@dukanlink.com", "admin@dukkanlink.in"];
 ```
+
 Only these emails get admin when signing up.
 
 ### Layer 2: Database Trigger
+
 A database trigger (`auto_assign_first_admin`) makes the FIRST user who
 creates a profile automatically an admin. After that, no one else gets
 admin through signup.
 
 ### Layer 3: Row Level Security
+
 The `user_profiles` table has a policy that prevents users from changing
 their own `is_admin` field. Only an existing admin can promote others.
 
@@ -561,9 +579,11 @@ If you (the admin) want to make another user an admin:
 1. Go to Supabase > Authentication > Users
 2. Find the user and copy their **ID** (UUID)
 3. Go to SQL Editor and run:
+
 ```sql
 UPDATE user_profiles SET is_admin = TRUE WHERE id = 'PASTE_USER_ID_HERE';
 ```
+
 4. That user will now see the Admin tab after refreshing
 
 ### How to Remove Admin Access
@@ -577,6 +597,7 @@ UPDATE user_profiles SET is_admin = FALSE WHERE id = 'PASTE_USER_ID_HERE';
 ## How Email Verification Works
 
 ### Sign Up Flow
+
 1. User enters email + password and clicks "Create Account"
 2. Supabase sends a verification email with a link
 3. User sees the "Check your email" screen in the app
@@ -586,15 +607,18 @@ UPDATE user_profiles SET is_admin = FALSE WHERE id = 'PASTE_USER_ID_HERE';
 7. User signs in successfully
 
 ### Sign In Flow
+
 1. User enters email + password and clicks "Sign In"
 2. If email is NOT verified, they see an error: "Please verify your email before signing in"
 3. If email IS verified, they sign in successfully
 
 ### Resend Verification
+
 If the user did not receive the email, they can click "Resend confirmation email"
 on the verification screen.
 
 ### Important Notes
+
 - Temp mail / disposable email domains are NOT blocked by default
 - To block them, you would need a custom edge function (advanced, not included)
 - Email verification uses a click-link method (not a code/OTP)
@@ -605,6 +629,7 @@ on the verification screen.
 ## How Google Auth Works
 
 ### Flow
+
 1. User clicks "Continue with Google" on the Login page
 2. A Google sign-in popup opens
 3. User picks their Google account
@@ -614,11 +639,13 @@ on the verification screen.
 7. A user profile is created automatically
 
 ### Google Auth + Email Verification
+
 - Google-authenticated users do NOT need email verification
 - Google already verified their email
 - They are signed in immediately
 
 ### Google Auth + Admin
+
 - If a Google user's email matches `admin@dukanlink.com`, they get admin
 - Otherwise, they are a regular user
 
@@ -626,15 +653,15 @@ on the verification screen.
 
 ## Database Tables Explained
 
-| Table | Purpose | Who Can See It |
-|-------|---------|---------------|
-| `auth.users` | Login info (email, password hash) | Managed by Supabase, not directly accessible |
-| `user_profiles` | Admin status for each user | Users see own, admins see all |
-| `shops` | Shop name, city, WhatsApp, slug, plan | Owners see own, admins see all, public sees active shops |
-| `products` | Product name, price, image, category | Owners see own, admins see all, public sees products in active shops |
-| `subscriptions` | Plan, billing, Stripe IDs (future) | Users see own, admins see all |
-| `subscription_events` | Audit trail for subscription changes | Users see own, admins see all |
-| `shop-images` (bucket) | Uploaded product/shop images | Anyone can view, only owner can upload/delete |
+| Table                  | Purpose                               | Who Can See It                                                       |
+| ---------------------- | ------------------------------------- | -------------------------------------------------------------------- |
+| `auth.users`           | Login info (email, password hash)     | Managed by Supabase, not directly accessible                         |
+| `user_profiles`        | Admin status for each user            | Users see own, admins see all                                        |
+| `shops`                | Shop name, city, WhatsApp, slug, plan | Owners see own, admins see all, public sees active shops             |
+| `products`             | Product name, price, image, category  | Owners see own, admins see all, public sees products in active shops |
+| `subscriptions`        | Plan, billing, Stripe IDs (future)    | Users see own, admins see all                                        |
+| `subscription_events`  | Audit trail for subscription changes  | Users see own, admins see all                                        |
+| `shop-images` (bucket) | Uploaded product/shop images          | Anyone can view, only owner can upload/delete                        |
 
 ### Table Relationships
 
@@ -729,9 +756,11 @@ When you are ready to share your app with the world:
    - Save
 
 3. Build the production version:
+
 ```bash
 npm run build
 ```
+
 This creates a `dist/` folder with optimized files.
 
 ### Option 1: Vercel (Easiest, Free)
@@ -765,6 +794,7 @@ This creates a `dist/` folder with optimized files.
 ### Option 3: Custom Domain
 
 After deploying to Vercel or Netlify:
+
 1. Buy a domain (e.g., from GoDaddy, Namecheap)
 2. In Vercel/Netlify, go to Domain Settings
 3. Add your custom domain
@@ -776,55 +806,66 @@ After deploying to Vercel or Netlify:
 ## Common Problems and Fixes
 
 ### "Missing Supabase environment variables" error
+
 - Make sure `.env` file exists in the project ROOT folder (not inside src/)
 - Make sure the variable names start with `VITE_`
 - Restart the dev server after changing `.env` (Ctrl+C then `npm run dev`)
 
 ### Sign up works but says "verify your email"
+
 - This is correct behavior! Email verification is ON.
 - Check your email inbox (and spam folder) for the verification link.
 - If you want to turn OFF email verification: Authentication > Providers > Email > turn OFF "Confirm email"
 
 ### "Please verify your email before signing in" error
+
 - Your email is not verified yet.
 - Click the link in the verification email.
 - If you lost the email, click "Resend confirmation email" on the login page.
 
 ### Google sign-in does not work
+
 - Make sure you enabled Google in Supabase Authentication > Providers
 - Make sure you added the correct redirect URI in Google Cloud Console
 - The redirect URI must be: `https://YOUR-PROJECT-REF.supabase.co/auth/v1/callback`
 - Check that your Client ID and Secret are correct
 
 ### "row-level security" error when creating shop
+
 - You missed running the SQL in Step 3
 - Go to SQL Editor and run the SQL again
 - Make sure you see "Success" after running it
 
 ### Admin tab does not appear
+
 - You are not logged in as admin
 - Only the FIRST user (or admin email users) get admin access
 - Check: Go to Supabase > Table Editor > user_profiles > find your user > is_admin should be TRUE
 - If it is FALSE, run: `UPDATE user_profiles SET is_admin = TRUE WHERE id = 'YOUR_USER_ID';`
 
 ### Port 5173 already in use
+
 ```bash
 npm run dev -- --port 3000
 ```
+
 Then open http://localhost:3000
 
 ### npm install fails
+
 ```bash
 rm -rf node_modules package-lock.json
 npm install
 ```
 
 ### Images not uploading
+
 - Make sure the "shop-images" bucket exists in Supabase Storage
 - Make sure the bucket is set to PUBLIC
 - Make sure storage policies were created (run the SQL from Step 3)
 
 ### Styles look broken
+
 - Clear your browser cache (Ctrl+Shift+Delete)
 - Hard refresh the page (Ctrl+Shift+R)
 
@@ -851,14 +892,14 @@ Before going live, verify ALL of these:
 
 ## Technology Stack
 
-| Technology | What It Does |
-|-----------|-------------|
-| React 18 | Builds the user interface |
-| React Router | Handles page navigation |
-| Tailwind CSS | Makes everything look good |
-| Lucide React | Provides all icons |
-| Supabase | Database + authentication + storage |
-| Vite | Dev server and production build |
+| Technology   | What It Does                        |
+| ------------ | ----------------------------------- |
+| React 18     | Builds the user interface           |
+| React Router | Handles page navigation             |
+| Tailwind CSS | Makes everything look good          |
+| Lucide React | Provides all icons                  |
+| Supabase     | Database + authentication + storage |
+| Vite         | Dev server and production build     |
 
 ---
 

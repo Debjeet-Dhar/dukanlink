@@ -4,6 +4,9 @@ import { createUserProfile, isAdmin as checkIsAdmin, checkIfAnyAdminExists } fro
 
 const AuthContext = createContext(null);
 
+const SUPABASE_NOT_CONFIGURED_MSG =
+  'Backend not connected. Create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (see .env.example), then restart npm run dev.';
+
 const ADMIN_EMAILS = ['admin@dukanlink.com', 'admin@dukkanlink.in'];
 
 export function AuthProvider({ children }) {
@@ -14,22 +17,14 @@ export function AuthProvider({ children }) {
   const [emailConfirmed, setEmailConfirmed] = useState(false);
 
   const ensureUserProfile = async (userId, email) => {
+    if (!supabase) return;
     try {
-      const { data: existing } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (existing) return;
-
       const adminExists = await checkIfAnyAdminExists();
       const shouldBeAdmin = !adminExists && ADMIN_EMAILS.includes(email?.toLowerCase());
       await createUserProfile(userId, shouldBeAdmin);
     } catch (err) {
-      if (!err.message?.includes('duplicate') && !err.code !== '23505') {
-        console.error('Profile creation error:', err);
-      }
+      const isDup = err?.code === '23505' || err?.message?.includes?.('duplicate');
+      if (!isDup) console.error('Profile creation error:', err);
     }
   };
 
@@ -74,6 +69,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signUp = useCallback(async (email, password) => {
+    if (!supabase) return { error: SUPABASE_NOT_CONFIGURED_MSG, needsConfirmation: false };
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -95,6 +91,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signIn = useCallback(async (email, password) => {
+    if (!supabase) return { error: SUPABASE_NOT_CONFIGURED_MSG, needsConfirmation: false };
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -111,6 +108,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
+    if (!supabase) return { error: SUPABASE_NOT_CONFIGURED_MSG };
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -126,6 +124,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const resendConfirmation = useCallback(async (email) => {
+    if (!supabase) return { error: SUPABASE_NOT_CONFIGURED_MSG };
     try {
       const { error } = await supabase.auth.resend({
         type: 'signup',
@@ -142,7 +141,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    if (supabase) await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setIsAdmin(false);
