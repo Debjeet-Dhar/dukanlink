@@ -59,40 +59,28 @@ export async function getUserProfile(userId) {
 export async function checkIfAnyAdminExists() {
   try {
     if (!supabase) return false;
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('id')
-      .eq('is_admin', true)
-      .limit(1)
-      .maybeSingle();
-
+    const { data, error } = await supabase.rpc('admin_exists');
     if (error) return false;
-    return !!data;
+    return data === true;
   } catch {
     return false;
   }
 }
 
-export async function createUserProfile(userId, isAdmin = false) {
-  if (!supabase) throw new Error('Supabase not configured');
-
-  // First admin must be able to set is_admin true even if a row was already inserted
-  // with false. Regular users use ignoreDuplicates so we never overwrite is_admin
-  // on later logins (ensureUserProfile passes isAdmin false when any admin exists).
-  if (isAdmin) {
-    const { error } = await supabase
-      .from('user_profiles')
-      .upsert([{ id: userId, is_admin: true }], { onConflict: 'id' });
-
-    if (error) {
-      if (error.code === '23505') {
-        return getUserProfile(userId);
-      }
-      console.error('Create user profile failed:', error);
-      throw error;
-    }
-    return getUserProfile(userId);
+export async function claimFirstAdmin() {
+  try {
+    if (!supabase) throw new Error('Supabase not configured');
+    const { data, error } = await supabase.rpc('claim_first_admin');
+    if (error) throw error;
+    return data === true;
+  } catch (error) {
+    console.error('Claim first admin failed:', error);
+    throw error;
   }
+}
+
+export async function createUserProfile(userId) {
+  if (!supabase) throw new Error('Supabase not configured');
 
   const { error } = await supabase
     .from('user_profiles')
@@ -110,22 +98,4 @@ export async function createUserProfile(userId, isAdmin = false) {
   }
 
   return getUserProfile(userId);
-}
-
-export async function setAdminStatus(userId, isAdmin) {
-  try {
-    if (!supabase) throw new Error('Supabase not configured');
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .update({ is_admin: isAdmin })
-      .eq('id', userId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Set admin status failed:', error);
-    throw error;
-  }
 }

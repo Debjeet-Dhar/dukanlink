@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { MapPin, MessageCircle, Phone, Loader2, ArrowLeft } from '../components/Icons';
+import { getProductImageUrl } from '../lib/productImage';
 
 export default function PublicShop() {
   const { slug } = useParams();
   const [shop, setShop] = useState(null);
   const [products, setProducts] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export default function PublicShop() {
           id: p.id,
           name: p.name,
           price: Number(p.price),
-          image: p.image || '',
+          image: getProductImageUrl(p.image),
           description: p.description || '',
           category: p.category || '',
           tags: p.tags || [],
@@ -61,6 +63,15 @@ export default function PublicShop() {
     const phone = shop.whatsapp.replace(/\D/g, '');
     window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
   };
+
+  const categories = useMemo(() => {
+    const categoryNames = products.map((product) => product.category).filter(Boolean);
+    return ['All', ...Array.from(new Set(categoryNames))];
+  }, [products]);
+
+  const visibleProducts = selectedCategory === 'All'
+    ? products
+    : products.filter((product) => product.category === selectedCategory);
 
   if (loading) {
     return (
@@ -104,85 +115,131 @@ export default function PublicShop() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-50 page-enter">
-      {/* Banner */}
-      <div className="relative h-44 sm:h-56 lg:h-72 bg-surface-200 overflow-hidden">
+    <div className="min-h-screen bg-[#f7f8f5] page-enter pb-20 sm:pb-0">
+      <div className="relative h-52 sm:h-64 lg:h-80 bg-surface-200 overflow-visible">
         <img src={shop.banner} alt="Banner" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
+        <div className="absolute top-4 left-4 right-4 mx-auto flex max-w-5xl items-center justify-between text-white sm:px-2">
+          <Link to="/" className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-2 text-xs font-semibold backdrop-blur-md transition-colors hover:bg-white/25">
+            <ArrowLeft className="w-3.5 h-3.5" /> DukanLink
+          </Link>
+          <span className="rounded-full bg-white/15 px-3 py-2 text-xs font-semibold backdrop-blur-md">Open now</span>
+        </div>
+        <div className="absolute left-1/2 bottom-0 h-28 w-28 -translate-x-1/2 translate-y-1/2 rounded-full border-4 border-white bg-white shadow-elevated sm:h-32 sm:w-32 lg:h-36 lg:w-36">
+          <img src={shop.logo} alt="Logo" className="h-full w-full rounded-full object-cover" />
+        </div>
       </div>
 
-      {/* Shop Info */}
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="-mt-14 sm:-mt-18 lg:-mt-20 mb-4 flex items-end gap-4 lg:gap-5">
-          <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-2xl border-4 border-white shadow-card overflow-hidden bg-white flex-shrink-0">
-            <img src={shop.logo} alt="Logo" className="w-full h-full object-cover" />
-          </div>
-          <div className="pb-2">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-surface-900">{shop.name}</h1>
-            <div className="flex items-center gap-1.5 text-surface-500 mt-1">
-              <MapPin className="w-4 h-4" />
-              <span className="text-sm font-medium">{shop.city}</span>
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="pt-14 text-center sm:pt-16">
+          <div className="mx-auto max-w-2xl">
+            <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-bold text-primary-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary-500" /> Verified shop
+            </div>
+            <h1 className="text-2xl font-bold text-surface-900 sm:text-3xl lg:text-4xl">{shop.name}</h1>
+            <div className="mt-1.5 flex flex-wrap items-center justify-center gap-3 text-surface-500">
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium">
+                <MapPin className="w-4 h-4" />
+                {shop.city}
+              </span>
+              <span className="text-sm font-medium">{products.length} products</span>
+            </div>
+
+            {shop.description && (
+              <p className="mx-auto mt-2.5 max-w-2xl text-sm leading-6 text-surface-600 lg:text-base">{shop.description}</p>
+            )}
+
+            <div className="mx-auto mt-3.5 grid max-w-sm grid-cols-2 gap-3">
+              <a
+                href={`tel:${shop.whatsapp}`}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-surface-200 bg-white px-4 py-2.5 text-sm font-bold text-surface-700 shadow-soft transition-all hover:border-surface-300 hover:shadow-card active:scale-[0.98]"
+              >
+                <Phone className="w-4 h-4" /> Call
+              </a>
+              <button
+                onClick={() => {
+                  const message = encodeURIComponent('Hi! I want to know about your products.');
+                  const phone = shop.whatsapp.replace(/\D/g, '');
+                  window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-2.5 text-sm font-bold text-white shadow-elevated transition-all hover:bg-green-700 active:scale-[0.98]"
+              >
+                <MessageCircle className="w-4 h-4" /> Chat
+              </button>
             </div>
           </div>
+        </section>
+
+        <div className="mb-5 mt-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-primary-700">Catalog</p>
+            <h2 className="mt-1 text-2xl font-bold text-surface-900 lg:text-3xl">Featured Products</h2>
+            <p className="mt-0.5 text-sm font-medium text-surface-500">Choose your item and order directly on WhatsApp.</p>
+          </div>
+          {categories.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 sm:max-w-[58%] scrollbar-hide">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`whitespace-nowrap rounded-full border px-4 py-2.5 text-sm font-bold transition-all active:scale-[0.98] ${
+                    selectedCategory === category
+                      ? 'border-primary-600 bg-primary-600 text-white shadow-soft'
+                      : 'border-surface-200 bg-white text-surface-600 shadow-soft hover:border-surface-300'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-
-        {shop.description && (
-          <p className="text-surface-600 text-sm lg:text-base leading-relaxed mb-6 max-w-2xl">{shop.description}</p>
-        )}
-
-        {/* Contact Buttons */}
-        <div className="flex gap-3 mb-8 max-w-md">
-          <a
-            href={`tel:${shop.whatsapp}`}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-white border-2 border-surface-200 rounded-xl text-surface-700 font-semibold text-sm hover:border-surface-300 transition-all active:scale-[0.98]"
-          >
-            <Phone className="w-4 h-4" /> Call
-          </a>
-          <button
-            onClick={() => {
-              const message = encodeURIComponent('Hi! I want to know about your products.');
-              const phone = shop.whatsapp.replace(/\D/g, '');
-              window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-            }}
-            className="flex-1 flex items-center justify-center gap-2 py-3 bg-green-600 text-white rounded-xl font-semibold text-sm hover:bg-green-700 transition-all active:scale-[0.98] shadow-soft"
-          >
-            <MessageCircle className="w-4 h-4" /> WhatsApp
-          </button>
-        </div>
-
-        {/* Products */}
-        <h2 className="text-lg lg:text-xl font-bold text-surface-900 mb-4">Products</h2>
         {products.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="rounded-[24px] border border-dashed border-surface-300 bg-white py-16 text-center shadow-soft">
             <p className="text-surface-400 font-medium">No products available yet</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-4 pb-8">
-            {products.map(product => (
-              <div key={product.id} className="bg-white rounded-2xl shadow-card overflow-hidden group hover:shadow-elevated hover:-translate-y-1 transition-all duration-300 flex flex-col">
-                <div className="relative overflow-hidden flex-1">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-32 sm:h-36 lg:h-44 object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+          <div className="grid grid-cols-1 gap-4 pb-10 min-[420px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+            {visibleProducts.map(product => (
+              <div key={product.id} className="group flex flex-col overflow-hidden rounded-[24px] border border-surface-200/80 bg-white shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-primary-200 hover:shadow-elevated">
+                <div className="relative m-2 overflow-hidden rounded-[20px] bg-[#f3f5ef]">
+                  <div className="flex h-56 items-center justify-center min-[420px]:h-44 sm:h-48 lg:h-52">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
                   {product.tags && product.tags.length > 0 && (
-                    <div className="absolute top-2 left-2">
-                      <span className="inline-block px-2.5 py-1 bg-primary-600 text-white text-xs font-bold rounded-lg shadow-md">
+                    <div className="absolute left-3 top-3">
+                      <span className="inline-block rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-extrabold text-surface-800 shadow-soft backdrop-blur">
                         {product.tags[0]}
                       </span>
                     </div>
                   )}
                 </div>
-                <div className="p-3 lg:p-4 flex flex-col">
-                  <p className="text-sm font-semibold text-surface-900 truncate">{product.name}</p>
-                  <p className="text-base font-bold text-primary-600 mt-1">₹{product.price}</p>
-                  <button
-                    onClick={() => handleOrder(product.name)}
-                    className="w-full mt-auto pt-3 py-2.5 text-xs font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-all active:scale-95 shadow-soft"
-                  >
-                    Order on WhatsApp
-                  </button>
+                <div className="flex flex-col px-4 pb-4 pt-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      {product.category && <p className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-primary-700">{product.category}</p>}
+                      <p className="line-clamp-2 text-base font-extrabold leading-5 text-surface-900">{product.name}</p>
+                    </div>
+                  </div>
+                  {product.description && <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-surface-500">{product.description}</p>}
+                  <div className="pt-3">
+                    <div className="mb-2.5 flex items-end justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-surface-400">Price</p>
+                        <p className="text-xl font-extrabold text-surface-900">₹{product.price}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleOrder(product.name)}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-600 px-4 py-2.5 text-sm font-extrabold text-white shadow-soft transition-all hover:bg-green-700 hover:shadow-card active:scale-95"
+                    >
+                      <MessageCircle className="w-4 h-4" /> Order on WhatsApp
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -190,7 +247,6 @@ export default function PublicShop() {
         )}
       </div>
 
-      {/* Footer */}
       <div className="border-t border-surface-200 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-center gap-2">
           <span className="text-xs text-surface-400 font-medium">Powered by</span>
@@ -201,6 +257,19 @@ export default function PublicShop() {
             <span className="text-xs font-bold text-surface-700">DukanLink</span>
           </Link>
         </div>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-surface-200 bg-white/95 p-3 shadow-elevated backdrop-blur sm:hidden">
+        <button
+          onClick={() => {
+            const message = encodeURIComponent('Hi! I want to know about your products.');
+            const phone = shop.whatsapp.replace(/\D/g, '');
+            window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+          }}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-600 py-3.5 text-sm font-bold text-white shadow-elevated active:scale-[0.98]"
+        >
+          <MessageCircle className="w-4 h-4" /> Chat on WhatsApp
+        </button>
       </div>
     </div>
   );

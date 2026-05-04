@@ -10,6 +10,7 @@ import Products from './pages/Products';
 import Settings from './pages/Settings';
 import DemoShop from './pages/DemoShop';
 import Admin from './pages/Admin';
+import AdminAccess from './pages/AdminAccess';
 import PublicShop from './pages/PublicShop';
 import { Loader2 } from './components/Icons';
 
@@ -70,13 +71,20 @@ function AppShell() {
       <Route path="/login" element={<Login onBack={() => navigate('/')} />} />
       <Route path="/demo" element={<DemoShop onBack={() => navigate('/')} />} />
       <Route path="/shop/:slug" element={<PublicShop />} />
+      <Route
+        path="/admin"
+        element={
+          isAdmin
+            ? <AppLayout page="admin" onLogout={handleLogout} shop={shop} isAdmin={isAdmin} />
+            : <AdminAccess />
+        }
+      />
 
       <Route element={<AuthLayout />}>
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/dashboard" element={<AppLayout page={activePage} onLogout={handleLogout} shop={shop} isAdmin={isAdmin} />} />
         <Route path="/products" element={<AppLayout page={activePage} onLogout={handleLogout} shop={shop} isAdmin={isAdmin} />} />
         <Route path="/settings" element={<AppLayout page={activePage} onLogout={handleLogout} shop={shop} isAdmin={isAdmin} />} />
-        <Route path="/admin" element={<AppLayout page={activePage} onLogout={handleLogout} shop={shop} isAdmin={isAdmin} />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

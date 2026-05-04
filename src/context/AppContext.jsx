@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { handleSupabaseError } from '../lib/errorHandler';
+import { getProductImageUrl } from '../lib/productImage';
 
 const FREE_PRODUCT_LIMIT = 15;
 
@@ -68,7 +69,7 @@ export function AppProvider({ children }) {
         id: p.id,
         name: p.name,
         price: Number(p.price),
-        image: p.image || '',
+        image: getProductImageUrl(p.image),
         description: p.description || '',
         category: p.category || '',
         tags: p.tags || [],
@@ -128,7 +129,6 @@ export function AppProvider({ children }) {
     if (data.slug !== undefined) updateData.slug = data.slug;
     if (data.banner !== undefined) updateData.banner = data.banner;
     if (data.logo !== undefined) updateData.logo = data.logo;
-    if (data.plan !== undefined) updateData.plan = data.plan;
 
     const { error } = await supabase
       .from('shops')
@@ -201,8 +201,9 @@ export function AppProvider({ children }) {
   }, [refreshProducts]);
 
   const upgradePlan = useCallback(async () => {
-    await updateShop({ plan: 'premium' });
-  }, [updateShop]);
+    setActionError('Payments are not connected yet. Premium upgrades must be enabled through billing.');
+    return false;
+  }, []);
 
   const isSlugAvailable = useCallback(async (slug) => {
     if (!slug || slug.length < 3 || !supabase) return false;

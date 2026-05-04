@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { supabase } from '../lib/supabase';
 import { MapPin, MessageCircle, Phone, Loader2 } from '../components/Icons';
+import { getProductImageUrl } from '../lib/productImage';
 
 export default function ShopPreview() {
   const { shop: contextShop, products: contextProducts } = useApp();
@@ -38,7 +39,7 @@ export default function ShopPreview() {
 
         setPublicProducts((productData || []).map((p) => ({
           id: p.id, name: p.name, price: Number(p.price),
-          image: p.image || '', description: p.description || '',
+          image: getProductImageUrl(p.image), description: p.description || '',
           category: p.category || '', tags: p.tags || [],
         })));
       }
@@ -112,8 +113,8 @@ export default function ShopPreview() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-4 pb-8">
             {products.map(product => (
               <div key={product.id} className="bg-white rounded-2xl shadow-card overflow-hidden group hover:shadow-elevated hover:-translate-y-1 transition-all duration-300 flex flex-col">
-                <div className="relative overflow-hidden flex-1">
-                  <img src={product.image} alt={product.name} className="w-full h-32 sm:h-36 lg:h-44 object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="relative overflow-hidden bg-surface-100">
+                  <img src={product.image} alt={product.name} className="w-full h-32 sm:h-36 lg:h-44 object-contain p-2 group-hover:scale-105 transition-transform duration-500" />
                   {product.tags && product.tags.length > 0 && (
                     <div className="absolute top-2 left-2">
                       <span className="inline-block px-2.5 py-1 bg-primary-600 text-white text-xs font-bold rounded-lg shadow-md">{product.tags[0]}</span>
