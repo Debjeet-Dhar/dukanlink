@@ -79,15 +79,31 @@ export async function claimFirstAdmin() {
   }
 }
 
-export async function createUserProfile(userId) {
+export async function createUserProfile(userId, profile = {}) {
   if (!supabase) throw new Error('Supabase not configured');
 
-  const { error } = await supabase
+  const insertPayload = { id: userId, is_admin: false };
+  if (profile.email) insertPayload.email = profile.email;
+  if (profile.fullName) insertPayload.full_name = profile.fullName;
+  if (profile.avatarUrl) insertPayload.avatar_url = profile.avatarUrl;
+  if (profile.lastSignInAt) insertPayload.last_sign_in_at = profile.lastSignInAt;
+
+  let { error } = await supabase
     .from('user_profiles')
-    .upsert([{ id: userId, is_admin: false }], {
+    .upsert([insertPayload], {
       onConflict: 'id',
       ignoreDuplicates: true,
     });
+
+  if (error?.message?.includes('column') && Object.keys(profile).length > 0) {
+    const fallback = await supabase
+      .from('user_profiles')
+      .upsert([{ id: userId, is_admin: false }], {
+        onConflict: 'id',
+        ignoreDuplicates: true,
+      });
+    error = fallback.error;
+  }
 
   if (error) {
     if (error.code === '23505') {
@@ -95,6 +111,23 @@ export async function createUserProfile(userId) {
     }
     console.error('Create user profile failed:', error);
     throw error;
+  }
+
+  const updatePayload = {};
+  if (profile.email) updatePayload.email = profile.email;
+  if (profile.fullName) updatePayload.full_name = profile.fullName;
+  if (profile.avatarUrl) updatePayload.avatar_url = profile.avatarUrl;
+  if (profile.lastSignInAt) updatePayload.last_sign_in_at = profile.lastSignInAt;
+
+  if (Object.keys(updatePayload).length > 0) {
+    const { error: updateError } = await supabase
+      .from('user_profiles')
+      .update(updatePayload)
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Update user profile failed:', updateError);
+    }
   }
 
   return getUserProfile(userId);

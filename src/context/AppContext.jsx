@@ -86,8 +86,19 @@ export function AppProvider({ children }) {
     try {
       const { data, error } = await supabase
         .from('shops')
-        .select('id, name, slug, city, whatsapp, plan, status, created_at');
+        .select('id, owner_id, name, slug, city, whatsapp, description, banner, logo, plan, status, created_at, updated_at');
       if (error || !data) return;
+
+      const ownerIds = [...new Set(data.map(shop => shop.owner_id).filter(Boolean))];
+      let profilesById = {};
+      if (ownerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('id, email, full_name, avatar_url, last_sign_in_at')
+          .in('id', ownerIds);
+
+        profilesById = Object.fromEntries((profiles || []).map(profile => [profile.id, profile]));
+      }
 
       const shopsWithCounts = await Promise.all(
         data.map(async (s) => {
@@ -95,16 +106,25 @@ export function AppProvider({ children }) {
             .from('products')
             .select('*', { count: 'exact', head: true })
             .eq('shop_id', s.id);
+          const profile = profilesById[s.owner_id] || {};
           return {
             id: s.id,
+            ownerId: s.owner_id,
             name: s.name,
             slug: s.slug,
-            owner: 'Owner',
+            description: s.description || '',
+            banner: s.banner || '',
+            logo: s.logo || '',
+            owner: profile.full_name || profile.email || 'Unknown owner',
+            ownerEmail: profile.email || '',
+            ownerAvatar: profile.avatar_url || '',
+            ownerLastSeen: profile.last_sign_in_at || null,
             ownerPhone: s.whatsapp || '',
             city: s.city || '',
             plan: s.plan || 'free',
             productCount: count || 0,
             createdAt: s.created_at,
+            updatedAt: s.updated_at,
             status: s.status || 'active',
           };
         })
@@ -224,11 +244,32 @@ export function AppProvider({ children }) {
 
   const updateAdminShopStatus = useCallback(async (id, status) => {
     if (!supabase) return;
+    setActionError(null);
     const { error } = await supabase
       .from('shops')
       .update({ status })
       .eq('id', id);
-    if (!error) await refreshAdminShops();
+    if (error) {
+      setActionError(handleSupabaseError(error, 'updateAdminShopStatus'));
+      return false;
+    }
+    await refreshAdminShops();
+    return true;
+  }, [refreshAdminShops]);
+
+  const updateAdminShopPlan = useCallback(async (id, plan) => {
+    if (!supabase) return false;
+    setActionError(null);
+    const { error } = await supabase
+      .from('shops')
+      .update({ plan })
+      .eq('id', id);
+    if (error) {
+      setActionError(handleSupabaseError(error, 'updateAdminShopPlan'));
+      return false;
+    }
+    await refreshAdminShops();
+    return true;
   }, [refreshAdminShops]);
 
   const clearActionError = useCallback(() => setActionError(null), []);
@@ -252,6 +293,7 @@ export function AppProvider({ children }) {
       refreshProducts,
       refreshAdminShops,
       updateAdminShopStatus,
+      updateAdminShopPlan,
       clearActionError,
       FREE_PRODUCT_LIMIT,
     }}>

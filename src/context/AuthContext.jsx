@@ -20,10 +20,15 @@ export function AuthProvider({ children }) {
     return adminStatus;
   }, []);
 
-  const ensureUserProfile = async (userId) => {
+  const ensureUserProfile = async (authUser) => {
     if (!supabase) return;
     try {
-      await createUserProfile(userId);
+      await createUserProfile(authUser.id, {
+        email: authUser.email,
+        fullName: authUser.user_metadata?.full_name || authUser.user_metadata?.name,
+        avatarUrl: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture,
+        lastSignInAt: authUser.last_sign_in_at,
+      });
     } catch (err) {
       const isDup = err?.code === '23505' || err?.message?.includes?.('duplicate');
       if (!isDup) console.error('Profile creation error:', err);
@@ -42,7 +47,7 @@ export function AuthProvider({ children }) {
       setEmailConfirmed(!!session?.user?.email_confirmed_at);
       if (session?.user) {
         (async () => {
-          await ensureUserProfile(session.user.id);
+          await ensureUserProfile(session.user);
           await refreshAdminStatus();
         })();
       }
@@ -55,7 +60,7 @@ export function AuthProvider({ children }) {
       setEmailConfirmed(!!session?.user?.email_confirmed_at);
       if (session?.user) {
         (async () => {
-          await ensureUserProfile(session.user.id);
+          await ensureUserProfile(session.user);
           await refreshAdminStatus();
         })();
       } else {
@@ -75,13 +80,13 @@ export function AuthProvider({ children }) {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;
 
       if (data.user && data.user.email_confirmed_at) {
-        await ensureUserProfile(data.user.id);
+        await ensureUserProfile(data.user);
       }
 
       return { error: null, needsConfirmation: !data.user?.email_confirmed_at && !data.session };
@@ -113,7 +118,7 @@ export function AuthProvider({ children }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;
@@ -130,7 +135,7 @@ export function AuthProvider({ children }) {
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;

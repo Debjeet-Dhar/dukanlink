@@ -44,6 +44,30 @@ function AuthLayout() {
   return <Outlet />;
 }
 
+function AuthCallback() {
+  const { user, loading: authLoading } = useAuth();
+  const { shop, shopLoading } = useApp();
+  const location = useLocation();
+
+  if (authLoading || (user && shopLoading)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-50">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const params = new URLSearchParams(location.search);
+  const next = params.get('next');
+  const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : null;
+
+  return <Navigate to={safeNext || (shop ? '/dashboard' : '/onboarding')} replace />;
+}
+
 function AppShell() {
   const { user, isAdmin, signOut } = useAuth();
   const { shop } = useApp();
@@ -69,6 +93,7 @@ function AppShell() {
     <Routes>
       <Route path="/" element={<Landing onGetStarted={() => navigate('/login')} onDemo={() => navigate('/demo')} />} />
       <Route path="/login" element={<Login onBack={() => navigate('/')} />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/demo" element={<DemoShop onBack={() => navigate('/')} />} />
       <Route path="/shop/:slug" element={<PublicShop />} />
       <Route
