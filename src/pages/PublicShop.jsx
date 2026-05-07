@@ -62,7 +62,7 @@ export default function PublicShop() {
     const message = encodeURIComponent(`Hi! I'd like to order: ${productName}`);
     let phone = shop.whatsapp.replace(/\D/g, '');
     if (!phone.startsWith('91')) {
-    phone = '91' + phone;
+    phone = '+91' + phone;
     }
     window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
   };
