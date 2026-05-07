@@ -60,7 +60,10 @@ export default function PublicShop() {
   const handleOrder = (productName) => {
     if (!shop) return;
     const message = encodeURIComponent(`Hi! I'd like to order: ${productName}`);
-    const phone = shop.whatsapp.replace(/\D/g, '');
+    let phone = shop.whatsapp.replace(/\D/g, '');
+    if (!phone.startsWith('91')) {
+    phone = '91' + phone;
+    }
     window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
   };
 
