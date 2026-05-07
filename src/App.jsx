@@ -15,7 +15,7 @@ import PublicShop from './pages/PublicShop';
 import { Loader2 } from './components/Icons';
 
 function AuthLayout() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin } = useAuth();
   const { shop, shopLoading } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,11 +33,13 @@ function AuthLayout() {
     return <Navigate to={redirectTo} replace />;
   }
 
-  if (!shop && location.pathname !== '/onboarding') {
+  // If user is not admin and has no shop, redirect to onboarding
+  if (!shop && !isAdmin && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 
-  if (shop && location.pathname === '/onboarding') {
+  // If user has a shop (or is admin) and tries to access onboarding, redirect to dashboard
+  if ((shop || isAdmin) && location.pathname === '/onboarding') {
     return <Navigate to="/dashboard" replace />;
   }
 

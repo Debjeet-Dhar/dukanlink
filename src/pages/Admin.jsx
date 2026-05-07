@@ -48,6 +48,17 @@ export default function Admin() {
   const totalProducts = adminShops.reduce((sum, s) => sum + s.productCount, 0);
   const flaggedCount = adminShops.filter(s => s.status === 'flagged').length;
   const suspendedCount = adminShops.filter(s => s.status === 'suspended').length;
+  const activeCount = adminShops.filter(s => s.status === 'active').length;
+  
+  // Calculate additional statistics
+  const totalCities = [...new Set(adminShops.map(s => s.city).filter(Boolean))].length;
+  const avgProductsPerShop = totalShops > 0 ? Math.round(totalProducts / totalShops) : 0;
+  const recentShops = adminShops.filter(s => {
+    const createdAt = new Date(s.createdAt);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return createdAt >= thirtyDaysAgo;
+  }).length;
 
   const handleAction = async () => {
     if (!actionModal) return;
@@ -96,19 +107,115 @@ export default function Admin() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="card card-hover"><div className="flex items-center gap-2 mb-2"><div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center"><Store className="w-4 h-4 text-primary-600" /></div></div><p className="text-xs text-surface-500 font-medium">Total Shops</p><p className="text-2xl font-bold text-surface-900">{totalShops}</p></div>
-        <div className="card card-hover"><div className="flex items-center gap-2 mb-2"><div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center"><Crown className="w-4 h-4 text-amber-600" /></div></div><p className="text-xs text-surface-500 font-medium">Premium Shops</p><p className="text-2xl font-bold text-surface-900">{totalPremium}</p><p className="text-xs text-surface-400 mt-0.5">{totalFree} free</p></div>
-        <div className="card card-hover"><div className="flex items-center gap-2 mb-2"><div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center"><Package className="w-4 h-4 text-emerald-600" /></div></div><p className="text-xs text-surface-500 font-medium">Total Products</p><p className="text-2xl font-bold text-surface-900">{totalProducts}</p></div>
-        <div className="card card-hover"><div className="flex items-center gap-2 mb-2"><div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center"><AlertTriangle className="w-4 h-4 text-red-500" /></div></div><p className="text-xs text-surface-500 font-medium">Issues</p><p className="text-2xl font-bold text-surface-900">{flaggedCount + suspendedCount}</p><p className="text-xs text-surface-400 mt-0.5">{flaggedCount} flagged, {suspendedCount} suspended</p></div>
+        <div className="card card-hover">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center">
+              <Store className="w-4 h-4 text-primary-600" />
+            </div>
+          </div>
+          <p className="text-xs text-surface-500 font-medium">Total Shops</p>
+          <p className="text-2xl font-bold text-surface-900">{totalShops}</p>
+          <p className="text-xs text-surface-400 mt-0.5">{recentShops} new (30d)</p>
+        </div>
+        <div className="card card-hover">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+              <Crown className="w-4 h-4 text-amber-600" />
+            </div>
+          </div>
+          <p className="text-xs text-surface-500 font-medium">Premium Shops</p>
+          <p className="text-2xl font-bold text-surface-900">{totalPremium}</p>
+          <p className="text-xs text-surface-400 mt-0.5">{totalFree} free</p>
+        </div>
+        <div className="card card-hover">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+              <Package className="w-4 h-4 text-emerald-600" />
+            </div>
+          </div>
+          <p className="text-xs text-surface-500 font-medium">Total Products</p>
+          <p className="text-2xl font-bold text-surface-900">{totalProducts}</p>
+          <p className="text-xs text-surface-400 mt-0.5">Avg: {avgProductsPerShop}/shop</p>
+        </div>
+        <div className="card card-hover">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+            </div>
+          </div>
+          <p className="text-xs text-surface-500 font-medium">Issues</p>
+          <p className="text-2xl font-bold text-surface-900">{flaggedCount + suspendedCount}</p>
+          <p className="text-xs text-surface-400 mt-0.5">{flaggedCount} flagged, {suspendedCount} suspended</p>
+        </div>
       </div>
 
-      <div className="card">
-        <h3 className="font-semibold text-surface-900 mb-3">Plan Distribution</h3>
-        <div className="flex items-center gap-4">
-          <div className="flex-1"><div className="h-3 bg-surface-100 rounded-full overflow-hidden"><div className="h-full bg-amber-500 rounded-full transition-all duration-500" style={{ width: totalShops > 0 ? `${(totalPremium / totalShops) * 100}%` : '0%' }} /></div></div>
-          <div className="flex items-center gap-4 text-sm shrink-0">
-            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-amber-500" /><span className="text-surface-600 font-medium">Premium {totalPremium}</span></div>
-            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-surface-200" /><span className="text-surface-600 font-medium">Free {totalFree}</span></div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="card">
+          <h3 className="font-semibold text-surface-900 mb-3">Plan Distribution</h3>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="h-3 bg-surface-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-amber-500 rounded-full transition-all duration-500"
+                  style={{ width: totalShops > 0 ? `${(totalPremium / totalShops) * 100}%` : '0%' }}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-4 text-sm shrink-0">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                <span className="text-surface-600 font-medium">Premium {totalPremium}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-surface-200" />
+                <span className="text-surface-600 font-medium">Free {totalFree}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <h3 className="font-semibold text-surface-900 mb-3">Status Distribution</h3>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="h-3 bg-surface-100 rounded-full overflow-hidden flex">
+                <div
+                  className="h-full bg-emerald-500 rounded-l-full transition-all duration-500"
+                  style={{ width: totalShops > 0 ? `${(activeCount / totalShops) * 100}%` : '0%' }}
+                  title={`Active: ${activeCount}`}
+                />
+                <div
+                  className="h-full bg-amber-500 transition-all duration-500"
+                  style={{ width: totalShops > 0 ? `${(flaggedCount / totalShops) * 100}%` : '0%' }}
+                  title={`Flagged: ${flaggedCount}`}
+                />
+                <div
+                  className="h-full bg-red-500 rounded-r-full transition-all duration-500"
+                  style={{ width: totalShops > 0 ? `${(suspendedCount / totalShops) * 100}%` : '0%' }}
+                  title={`Suspended: ${suspendedCount}`}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-sm shrink-0">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span className="text-surface-600 font-medium">Active {activeCount}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                <span className="text-surface-600 font-medium">Flagged {flaggedCount}</span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-2 flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+              <span className="text-surface-600 font-medium">Suspended {suspendedCount}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-surface-300" />
+              <span className="text-surface-600 font-medium">Cities {totalCities}</span>
+            </div>
           </div>
         </div>
       </div>

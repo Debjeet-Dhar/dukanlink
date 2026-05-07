@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useApp } from '../context/AppContext';
 import { ArrowRight, Store, Package, MessageCircle, Smartphone, Zap, BarChart3, Globe, Shield, ChevronRight, Star, Eye, Menu, X } from '../components/Icons';
 
 function useInView(threshold = 0.12) {
@@ -72,6 +75,29 @@ const trustItems = [
 
 export default function Landing({ onGetStarted, onDemo }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const { user, loading: authLoading, isAdmin } = useAuth();
+  const { shop, shopLoading } = useApp();
+
+  useEffect(() => {
+    if (authLoading || shopLoading) return;
+    if (!user) return;
+
+    // If user is admin, redirect to admin dashboard
+    if (isAdmin) {
+      navigate('/admin', { replace: true });
+      return;
+    }
+
+    // If user has a shop, redirect to dashboard
+    if (shop) {
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+
+    // Otherwise, redirect to onboarding (new user)
+    navigate('/onboarding', { replace: true });
+  }, [user, authLoading, shop, shopLoading, isAdmin, navigate]);
 
   return (
     <div className="min-h-screen bg-white text-surface-900 overflow-x-hidden">
