@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /shop/
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /onboarding
+Disallow: /settings
+Disallow: /products
+Disallow: /login
+
+# Crawl delay to be respectful
+Crawl-delay: 1
+
+# Sitemaps
+Sitemap: https://dukanlink-app.vercel.app/sitemap.xml

@@ -1,34 +1,42 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useApp } from '../context/AppContext';
-import { supabase } from '../lib/supabase';
-import { Store, ArrowRight, Loader2, AlertCircle } from '../components/Icons';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useApp } from "../context/AppContext";
+import { supabase } from "../lib/supabase";
+import { formatWhatsAppNumber } from "../lib/whatsapp";
+import { Store, ArrowRight, Loader2, AlertCircle } from "../components/Icons";
 
 function generateSlug(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20);
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .slice(0, 20);
 }
 
 export default function Onboarding() {
   const { user } = useAuth();
   const { refreshShop } = useApp();
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [city, setCity] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState("");
+  const [city, setCity] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [description, setDescription] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [slugError, setSlugError] = useState('');
+  const [slugError, setSlugError] = useState("");
 
   const slug = generateSlug(name);
 
   const validate = () => {
     const e = {};
-    if (!name.trim()) e.name = 'Shop name is required';
-    if (!city.trim()) e.city = 'City is required';
-    if (!whatsapp.trim()) e.whatsapp = 'WhatsApp number is required';
-    else if (!/^\+?\d{10,15}$/.test(whatsapp.replace(/\s/g, ''))) e.whatsapp = 'Enter a valid phone number';
+    if (!name.trim()) e.name = "Shop name is required";
+    if (!city.trim()) e.city = "City is required";
+    if (!whatsapp.trim()) e.whatsapp = "WhatsApp number is required";
+    else {
+      const formatted = formatWhatsAppNumber(whatsapp);
+      if (!/^\+91\d{10}$/.test(formatted))
+        e.whatsapp = "Enter a valid 10-digit phone number";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -36,10 +44,12 @@ export default function Onboarding() {
   const handleSubmit = async () => {
     if (!validate() || !user) return;
     if (!supabase) {
-      setSlugError('Supabase is not configured. Add .env with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server.');
+      setSlugError(
+        "Supabase is not configured. Add .env with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then restart the dev server.",
+      );
       return;
     }
-    setSlugError('');
+    setSlugError("");
     setLoading(true);
 
     let finalSlug = slug || generateSlug(name);
@@ -47,11 +57,12 @@ export default function Onboarding() {
     let slugAvailable = false;
 
     while (!slugAvailable && suffix < 100) {
-      const candidate = suffix === 0 ? finalSlug : `${generateSlug(name)}${suffix}`;
+      const candidate =
+        suffix === 0 ? finalSlug : `${generateSlug(name)}${suffix}`;
       const { data } = await supabase
-        .from('shops')
-        .select('id')
-        .eq('slug', candidate)
+        .from("shops")
+        .select("id")
+        .eq("slug", candidate)
         .maybeSingle();
       if (!data) {
         finalSlug = candidate;
@@ -62,25 +73,27 @@ export default function Onboarding() {
     }
 
     if (!slugAvailable) {
-      setSlugError('Could not generate a unique slug. Try a different shop name.');
+      setSlugError(
+        "Could not generate a unique slug. Try a different shop name.",
+      );
       setLoading(false);
       return;
     }
 
-    const { error } = await supabase.from('shops').insert({
+    const { error } = await supabase.from("shops").insert({
       owner_id: user.id,
       name: name.trim(),
       slug: finalSlug,
       city: city.trim(),
-      whatsapp: whatsapp.trim(),
+      whatsapp: formatWhatsAppNumber(whatsapp),
       description: description.trim(),
-      plan: 'free',
-      status: 'active',
+      plan: "free",
+      status: "active",
     });
 
     if (error) {
-      if (error.code === '23505') {
-        setSlugError('This slug is already taken. Try a different shop name.');
+      if (error.code === "23505") {
+        setSlugError("This slug is already taken. Try a different shop name.");
       } else {
         setSlugError(error.message);
       }
@@ -90,7 +103,7 @@ export default function Onboarding() {
 
     await refreshShop();
     setLoading(false);
-    navigate('/dashboard', { replace: true });
+    navigate("/dashboard", { replace: true });
   };
 
   return (
@@ -107,53 +120,84 @@ export default function Onboarding() {
         <div className="card">
           <div className="space-y-5">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-surface-900">Shop Name</label>
+              <label className="text-sm font-semibold text-surface-900">
+                Shop Name
+              </label>
               <input
                 type="text"
                 value={name}
-                onChange={e => { setName(e.target.value); setErrors({}); }}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setErrors({});
+                }}
                 placeholder="My Awesome Shop"
-                className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-base transition-all duration-200 outline-none ${errors.name ? 'border-red-400' : 'border-surface-200 focus:border-primary-500'}`}
+                className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-base transition-all duration-200 outline-none ${errors.name ? "border-red-400" : "border-surface-200 focus:border-primary-500"}`}
               />
-              {errors.name && <p className="text-xs text-red-500 font-medium">{errors.name}</p>}
+              {errors.name && (
+                <p className="text-xs text-red-500 font-medium">
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             {name.length > 0 && (
               <div className="flex items-center gap-2 px-3 py-2.5 bg-surface-50 rounded-lg border border-surface-200">
                 <span className="text-surface-400 text-sm">dukanlink.in/</span>
-                <span className="text-primary-600 text-sm font-semibold">{slug}</span>
+                <span className="text-primary-600 text-sm font-semibold">
+                  {slug}
+                </span>
               </div>
             )}
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-surface-900">City</label>
+              <label className="text-sm font-semibold text-surface-900">
+                City
+              </label>
               <input
                 type="text"
                 value={city}
-                onChange={e => { setCity(e.target.value); setErrors({}); }}
+                onChange={(e) => {
+                  setCity(e.target.value);
+                  setErrors({});
+                }}
                 placeholder="Mumbai"
-                className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-base transition-all duration-200 outline-none ${errors.city ? 'border-red-400' : 'border-surface-200 focus:border-primary-500'}`}
+                className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-base transition-all duration-200 outline-none ${errors.city ? "border-red-400" : "border-surface-200 focus:border-primary-500"}`}
               />
-              {errors.city && <p className="text-xs text-red-500 font-medium">{errors.city}</p>}
+              {errors.city && (
+                <p className="text-xs text-red-500 font-medium">
+                  {errors.city}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-surface-900">WhatsApp Number</label>
+              <label className="text-sm font-semibold text-surface-900">
+                WhatsApp Number
+              </label>
               <input
                 type="tel"
                 value={whatsapp}
-                onChange={e => { setWhatsapp(e.target.value); setErrors({}); }}
+                onChange={(e) => {
+                  setWhatsapp(e.target.value);
+                  setErrors({});
+                }}
                 placeholder="+91 98765 43210"
-                className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-base transition-all duration-200 outline-none ${errors.whatsapp ? 'border-red-400' : 'border-surface-200 focus:border-primary-500'}`}
+                className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-base transition-all duration-200 outline-none ${errors.whatsapp ? "border-red-400" : "border-surface-200 focus:border-primary-500"}`}
               />
-              {errors.whatsapp && <p className="text-xs text-red-500 font-medium">{errors.whatsapp}</p>}
+              {errors.whatsapp && (
+                <p className="text-xs text-red-500 font-medium">
+                  {errors.whatsapp}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-surface-900">Description (optional)</label>
+              <label className="text-sm font-semibold text-surface-900">
+                Description (optional)
+              </label>
               <textarea
                 value={description}
-                onChange={e => setDescription(e.target.value)}
+                onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 placeholder="Tell customers about your shop..."
                 className="w-full px-4 py-3 bg-white border-2 border-surface-200 rounded-xl text-base transition-all duration-200 outline-none focus:border-primary-500 resize-none"
@@ -176,7 +220,9 @@ export default function Onboarding() {
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              <>Create My Shop <ArrowRight className="w-4 h-4" /></>
+              <>
+                Create My Shop <ArrowRight className="w-4 h-4" />
+              </>
             )}
           </button>
 

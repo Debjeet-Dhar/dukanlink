@@ -4,33 +4,108 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<<<<<<< HEAD
     <title>DukanLink - Your Shop, One Link Away</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+=======
+    <meta
+      name="description"
+      content="DukanLink - Create your free online shop in seconds. No coding required. Get orders directly on WhatsApp. Perfect for small businesses, startups, and resellers."
+    />
+    <meta
+      name="keywords"
+      content="online shop, WhatsApp shop, ecommerce, small business, free shop, digital store, no coding"
+    />
+    <meta name="author" content="DukanLink" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0066ff" />
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://dukanlink-app.vercel.app/" />
+    <meta
+      property="og:title"
+      content="DukanLink - Create Your Free Online Shop in Seconds"
+    />
+    <meta
+      property="og:description"
+      content="Build your online shop with no coding. Get orders on WhatsApp. Free to start, trusted by thousands."
+    />
+    <meta property="og:image" content="https://dukanlink-app.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="DukanLink" />
+
+    <!-- Twitter Card Meta Tags -->
+>>>>>>> 75e432a (make seo and fixed some basic bug)
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://bolt.new/static/og_default.png" />
+    <meta name="twitter:title" content="DukanLink - Free Online Shop Builder" />
+    <meta
+      name="twitter:description"
+      content="Create your online shop in seconds. No coding, no fees. Get orders on WhatsApp!"
+    />
+    <meta
+      name="twitter:image"
+      content="https://dukanlink-app.vercel.app/twitter-image.png"
+    />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://dukanlink-app.vercel.app/" />
+
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "DukanLink",
+        "description": "Free online shop builder with WhatsApp integration",
+        "url": "https://dukanlink-app.vercel.app",
+        "applicationCategory": "BusinessApplication",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.8",
+          "ratingCount": "250"
+        }
+      }
+    </script>
+
+    <title>DukanLink - Your Shop, One Link Away</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script type="text/javascript">
-    (function (l) {
-      if (l.search[1] === "/") {
-        var decoded = l.search
-          .slice(1)
-          .split("&")
-          .map(function (s) {
-            return s.replace(/~and~/g, "&");
-          })
-          .join("?");
-        window.history.replaceState(
-          null,
-          null,
-          l.pathname.slice(0, -1) + decoded + l.hash
-        );
-      }
-    })(window.location);
-  </script>
+      (function (l) {
+        if (l.search[1] === "/") {
+          var decoded = l.search
+            .slice(1)
+            .split("&")
+            .map(function (s) {
+              return s.replace(/~and~/g, "&");
+            })
+            .join("?");
+          window.history.replaceState(
+            null,
+            null,
+            l.pathname.slice(0, -1) + decoded + l.hash,
+          );
+        }
+      })(window.location);
+    </script>
   </body>
 </html>

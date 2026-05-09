@@ -1,5 +1,7 @@
 import { useState, useRef } from "react";
 import { useApp } from "../context/AppContext";
+import useSEO from "../hooks/useSEO";
+import { PAGE_SEO } from "../lib/seo";
 import {
   FloatingInput,
   FloatingTextarea,
@@ -32,6 +34,13 @@ export default function Products() {
     productsLoading,
     FREE_PRODUCT_LIMIT,
   } = useApp();
+
+  // Set SEO metadata for Products page
+  useSEO({
+    ...PAGE_SEO.products,
+    canonicalUrl: "https://dukanlink.com/products",
+  });
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");

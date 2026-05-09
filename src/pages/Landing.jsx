@@ -1,8 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useApp } from '../context/AppContext';
-import { ArrowRight, Store, Package, MessageCircle, Smartphone, Zap, BarChart3, Globe, Shield, ChevronRight, Star, Eye, Menu, X } from '../components/Icons';
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useApp } from "../context/AppContext";
+import useSEO from "../hooks/useSEO";
+import { PAGE_SEO, generateBreadcrumbSchema } from "../lib/seo";
+import {
+  ArrowRight,
+  Store,
+  Package,
+  MessageCircle,
+  Smartphone,
+  Zap,
+  BarChart3,
+  Globe,
+  Shield,
+  ChevronRight,
+  Star,
+  Eye,
+  Menu,
+  X,
+} from "../components/Icons";
 
 function useInView(threshold = 0.12) {
   const ref = useRef(null);
@@ -11,8 +28,13 @@ function useInView(threshold = 0.12) {
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold }
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          obs.disconnect();
+        }
+      },
+      { threshold },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -20,12 +42,12 @@ function useInView(threshold = 0.12) {
   return { ref, visible };
 }
 
-function FadeIn({ children, className = '', delay = 0 }) {
+function FadeIn({ children, className = "", delay = 0 }) {
   const { ref, visible } = useInView();
   return (
     <div
       ref={ref}
-      className={`transition-all duration-700 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'} ${className}`}
+      className={`transition-all duration-700 ease-out ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       {children}
@@ -34,43 +56,132 @@ function FadeIn({ children, className = '', delay = 0 }) {
 }
 
 const demoProducts = [
-  { name: 'Chocolate Truffle Cake', price: 550, image: 'https://images.pexels.com/photos/132694/pexels-photo-132694.jpeg?auto=compress&cs=tinysrgb&w=400' },
-  { name: 'Fresh Croissants', price: 120, image: 'https://images.pexels.com/photos/1070880/pexels-photo-1070880.jpeg?auto=compress&cs=tinysrgb&w=400' },
-  { name: 'Red Velvet Cupcake', price: 90, image: 'https://images.pexels.com/photos/1055272/pexels-photo-1055272.jpeg?auto=compress&cs=tinysrgb&w=400' },
-  { name: 'Artisan Bread Loaf', price: 180, image: 'https://images.pexels.com/photos/2098085/pexels-photo-2098085.jpeg?auto=compress&cs=tinysrgb&w=400' },
+  {
+    name: "Chocolate Truffle Cake",
+    price: 550,
+    image:
+      "https://images.pexels.com/photos/132694/pexels-photo-132694.jpeg?auto=compress&cs=tinysrgb&w=400",
+  },
+  {
+    name: "Fresh Croissants",
+    price: 120,
+    image:
+      "https://images.pexels.com/photos/1070880/pexels-photo-1070880.jpeg?auto=compress&cs=tinysrgb&w=400",
+  },
+  {
+    name: "Red Velvet Cupcake",
+    price: 90,
+    image:
+      "https://images.pexels.com/photos/1055272/pexels-photo-1055272.jpeg?auto=compress&cs=tinysrgb&w=400",
+  },
+  {
+    name: "Artisan Bread Loaf",
+    price: 180,
+    image:
+      "https://images.pexels.com/photos/2098085/pexels-photo-2098085.jpeg?auto=compress&cs=tinysrgb&w=400",
+  },
 ];
 
 const socialProofCards = [
-  { name: 'Bakery Shop', tagline: 'Fresh cakes & pastries daily', image: 'https://images.pexels.com/photos/132694/pexels-photo-132694.jpeg?auto=compress&cs=tinysrgb&w=600', banner: 'https://images.pexels.com/photos/132694/pexels-photo-132694.jpeg?auto=compress&cs=tinysrgb&w=800' },
-  { name: 'Clothing Store', tagline: 'Trendy fashion at best prices', image: 'https://images.pexels.com/photos/7679720/pexels-photo-7679720.jpeg?auto=compress&cs=tinysrgb&w=600', banner: 'https://images.pexels.com/photos/7679720/pexels-photo-7679720.jpeg?auto=compress&cs=tinysrgb&w=800' },
-  { name: 'Street Food Stall', tagline: 'Authentic local flavors', image: 'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=600', banner: 'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=800' },
+  {
+    name: "Bakery Shop",
+    tagline: "Fresh cakes & pastries daily",
+    image:
+      "https://images.pexels.com/photos/132694/pexels-photo-132694.jpeg?auto=compress&cs=tinysrgb&w=600",
+    banner:
+      "https://images.pexels.com/photos/132694/pexels-photo-132694.jpeg?auto=compress&cs=tinysrgb&w=800",
+  },
+  {
+    name: "Clothing Store",
+    tagline: "Trendy fashion at best prices",
+    image:
+      "https://images.pexels.com/photos/7679720/pexels-photo-7679720.jpeg?auto=compress&cs=tinysrgb&w=600",
+    banner:
+      "https://images.pexels.com/photos/7679720/pexels-photo-7679720.jpeg?auto=compress&cs=tinysrgb&w=800",
+  },
+  {
+    name: "Street Food Stall",
+    tagline: "Authentic local flavors",
+    image:
+      "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=600",
+    banner:
+      "https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=800",
+  },
 ];
 
 const steps = [
-  { icon: <Store className="w-6 h-6" />, title: 'Create your shop', desc: 'Enter your shop name and go live in seconds. No coding, no setup fees.' },
-  { icon: <Package className="w-6 h-6" />, title: 'Add your products', desc: 'Upload photos, set prices, and organize your catalog effortlessly.' },
-  { icon: <MessageCircle className="w-6 h-6" />, title: 'Get orders on WhatsApp', desc: 'Customers browse your shop and order directly to your WhatsApp.' },
+  {
+    icon: <Store className="w-6 h-6" />,
+    title: "Create your shop",
+    desc: "Enter your shop name and go live in seconds. No coding, no setup fees.",
+  },
+  {
+    icon: <Package className="w-6 h-6" />,
+    title: "Add your products",
+    desc: "Upload photos, set prices, and organize your catalog effortlessly.",
+  },
+  {
+    icon: <MessageCircle className="w-6 h-6" />,
+    title: "Get orders on WhatsApp",
+    desc: "Customers browse your shop and order directly to your WhatsApp.",
+  },
 ];
 
 const features = [
-  { icon: <Zap className="w-6 h-6" />, title: 'No coding required', desc: 'If you can use WhatsApp, you can run your online shop.' },
-  { icon: <MessageCircle className="w-6 h-6" />, title: 'WhatsApp ordering', desc: 'Orders land straight on your WhatsApp — no extra app needed.' },
-  { icon: <Smartphone className="w-6 h-6" />, title: 'Mobile optimized', desc: 'Your shop looks perfect on every phone and screen size.' },
-  { icon: <Zap className="w-6 h-6" />, title: 'Fast setup', desc: 'Go from zero to live shop in under 60 seconds.' },
-  { icon: <Shield className="w-6 h-6" />, title: 'Free to start', desc: 'No credit card, no trial. Start free, upgrade when ready.' },
-  { icon: <Globe className="w-6 h-6" />, title: 'Share anywhere', desc: 'One link — share on WhatsApp, Instagram, Facebook, anywhere.' },
+  {
+    icon: <Zap className="w-6 h-6" />,
+    title: "No coding required",
+    desc: "If you can use WhatsApp, you can run your online shop.",
+  },
+  {
+    icon: <MessageCircle className="w-6 h-6" />,
+    title: "WhatsApp ordering",
+    desc: "Orders land straight on your WhatsApp — no extra app needed.",
+  },
+  {
+    icon: <Smartphone className="w-6 h-6" />,
+    title: "Mobile optimized",
+    desc: "Your shop looks perfect on every phone and screen size.",
+  },
+  {
+    icon: <Zap className="w-6 h-6" />,
+    title: "Fast setup",
+    desc: "Go from zero to live shop in under 60 seconds.",
+  },
+  {
+    icon: <Shield className="w-6 h-6" />,
+    title: "Free to start",
+    desc: "No credit card, no trial. Start free, upgrade when ready.",
+  },
+  {
+    icon: <Globe className="w-6 h-6" />,
+    title: "Share anywhere",
+    desc: "One link — share on WhatsApp, Instagram, Facebook, anywhere.",
+  },
 ];
 
 const benefits = [
-  { icon: <BarChart3 className="w-7 h-7" />, title: 'Increase sales', desc: 'Reach customers beyond your local area and sell 24/7.' },
-  { icon: <Globe className="w-7 h-7" />, title: 'Reach more customers', desc: 'Share your shop link everywhere and grow your audience.' },
-  { icon: <Zap className="w-7 h-7" />, title: 'Simple and fast', desc: 'No learning curve. Set up once, sell forever.' },
+  {
+    icon: <BarChart3 className="w-7 h-7" />,
+    title: "Increase sales",
+    desc: "Reach customers beyond your local area and sell 24/7.",
+  },
+  {
+    icon: <Globe className="w-7 h-7" />,
+    title: "Reach more customers",
+    desc: "Share your shop link everywhere and grow your audience.",
+  },
+  {
+    icon: <Zap className="w-7 h-7" />,
+    title: "Simple and fast",
+    desc: "No learning curve. Set up once, sell forever.",
+  },
 ];
 
 const trustItems = [
-  { icon: <Zap className="w-4 h-4" />, text: 'No coding required' },
-  { icon: <Smartphone className="w-4 h-4" />, text: 'Works on any phone' },
-  { icon: <Shield className="w-4 h-4" />, text: 'Setup in under 2 minutes' },
+  { icon: <Zap className="w-4 h-4" />, text: "No coding required" },
+  { icon: <Smartphone className="w-4 h-4" />, text: "Works on any phone" },
+  { icon: <Shield className="w-4 h-4" />, text: "Setup in under 2 minutes" },
 ];
 
 export default function Landing({ onGetStarted, onDemo }) {
@@ -79,24 +190,34 @@ export default function Landing({ onGetStarted, onDemo }) {
   const { user, loading: authLoading, isAdmin } = useAuth();
   const { shop, shopLoading } = useApp();
 
+  // Set SEO metadata for Landing page
+  useSEO({
+    ...PAGE_SEO.landing,
+    url: "https://dukanlink.com/",
+    canonicalUrl: "https://dukanlink.com/",
+    schema: generateBreadcrumbSchema([
+      { name: "Home", url: "https://dukanlink.com/" },
+    ]),
+  });
+
   useEffect(() => {
     if (authLoading || shopLoading) return;
     if (!user) return;
 
     // If user is admin, redirect to admin dashboard
     if (isAdmin) {
-      navigate('/admin', { replace: true });
+      navigate("/admin", { replace: true });
       return;
     }
 
     // If user has a shop, redirect to dashboard
     if (shop) {
-      navigate('/dashboard', { replace: true });
+      navigate("/dashboard", { replace: true });
       return;
     }
 
     // Otherwise, redirect to onboarding (new user)
-    navigate('/onboarding', { replace: true });
+    navigate("/onboarding", { replace: true });
   }, [user, authLoading, shop, shopLoading, isAdmin, navigate]);
 
   return (
@@ -109,15 +230,34 @@ export default function Landing({ onGetStarted, onDemo }) {
             <div className="w-9 h-9 bg-primary-600 rounded-full flex items-center justify-center shadow-soft">
               <span className="text-white font-extrabold text-base">D</span>
             </div>
-            <span className="font-bold text-lg text-surface-900">DukanLink</span>
+            <span className="font-bold text-lg text-surface-900">
+              DukanLink
+            </span>
           </div>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-surface-600">
-            <a href="#how" className="hover:text-surface-900 transition-colors">How it works</a>
-            <a href="#features" className="hover:text-surface-900 transition-colors">Features</a>
-            <a href="#demo" className="hover:text-surface-900 transition-colors">Demo</a>
-            <a href="#pricing" className="hover:text-surface-900 transition-colors">Pricing</a>
+            <a href="#how" className="hover:text-surface-900 transition-colors">
+              How it works
+            </a>
+            <a
+              href="#features"
+              className="hover:text-surface-900 transition-colors"
+            >
+              Features
+            </a>
+            <a
+              href="#demo"
+              className="hover:text-surface-900 transition-colors"
+            >
+              Demo
+            </a>
+            <a
+              href="#pricing"
+              className="hover:text-surface-900 transition-colors"
+            >
+              Pricing
+            </a>
           </div>
 
           {/* Right icons */}
@@ -132,7 +272,10 @@ export default function Landing({ onGetStarted, onDemo }) {
             </button>
 
             {/* CTA */}
-            <button onClick={onGetStarted} className="hidden sm:inline-flex px-4 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 transition-all active:scale-95 shadow-soft">
+            <button
+              onClick={onGetStarted}
+              className="hidden sm:inline-flex px-4 py-2 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 transition-all active:scale-95 shadow-soft"
+            >
               Get Started
             </button>
 
@@ -141,7 +284,11 @@ export default function Landing({ onGetStarted, onDemo }) {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl text-surface-600 hover:bg-surface-100 transition-colors"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
             </button>
           </div>
         </div>
@@ -149,12 +296,42 @@ export default function Landing({ onGetStarted, onDemo }) {
         {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-surface-100 px-4 py-4 space-y-1 animate-[fadeIn_150ms_ease-out]">
-            <a href="#how" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 rounded-xl text-sm font-medium text-surface-600 hover:bg-surface-50">How it works</a>
-            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 rounded-xl text-sm font-medium text-surface-600 hover:bg-surface-50">Features</a>
-            <a href="#demo" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 rounded-xl text-sm font-medium text-surface-600 hover:bg-surface-50">Demo</a>
-            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="block px-4 py-2.5 rounded-xl text-sm font-medium text-surface-600 hover:bg-surface-50">Pricing</a>
+            <a
+              href="#how"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-4 py-2.5 rounded-xl text-sm font-medium text-surface-600 hover:bg-surface-50"
+            >
+              How it works
+            </a>
+            <a
+              href="#features"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-4 py-2.5 rounded-xl text-sm font-medium text-surface-600 hover:bg-surface-50"
+            >
+              Features
+            </a>
+            <a
+              href="#demo"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-4 py-2.5 rounded-xl text-sm font-medium text-surface-600 hover:bg-surface-50"
+            >
+              Demo
+            </a>
+            <a
+              href="#pricing"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-4 py-2.5 rounded-xl text-sm font-medium text-surface-600 hover:bg-surface-50"
+            >
+              Pricing
+            </a>
             <div className="pt-2 border-t border-surface-100 mt-2">
-              <button onClick={() => { setMobileMenuOpen(false); onGetStarted(); }} className="w-full py-3 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 transition-all">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onGetStarted();
+                }}
+                className="w-full py-3 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 transition-all"
+              >
                 Get Started
               </button>
             </div>
@@ -179,14 +356,15 @@ export default function Landing({ onGetStarted, onDemo }) {
 
           <FadeIn delay={50}>
             <h1 className="text-[2rem] sm:text-5xl lg:text-7xl font-extrabold leading-[1.15] sm:leading-[1.1] tracking-tight text-surface-900 mb-4">
-              Open Your Online Shop in{' '}
+              Open Your Online Shop in{" "}
               <span className="text-primary-500">2 Minutes</span>
             </h1>
           </FadeIn>
 
           <FadeIn delay={100}>
             <p className="text-base sm:text-lg lg:text-xl text-surface-500 leading-relaxed mt-4 sm:mt-6 mb-8 sm:mb-10 max-w-lg mx-auto">
-              Stop losing orders in chats. Get your own shop link and receive orders directly on WhatsApp.
+              Stop losing orders in chats. Get your own shop link and receive
+              orders directly on WhatsApp.
             </p>
           </FadeIn>
 
@@ -225,8 +403,12 @@ export default function Landing({ onGetStarted, onDemo }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="text-center mb-12">
-              <p className="text-sm font-semibold text-primary-600 mb-2">TRUSTED BY 500+ SHOPS</p>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-surface-900">Businesses already growing with DukanLink</h2>
+              <p className="text-sm font-semibold text-primary-600 mb-2">
+                TRUSTED BY 500+ SHOPS
+              </p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-surface-900">
+                Businesses already growing with DukanLink
+              </h2>
             </div>
           </FadeIn>
           <div className="grid sm:grid-cols-3 gap-5 lg:gap-8">
@@ -234,16 +416,27 @@ export default function Landing({ onGetStarted, onDemo }) {
               <FadeIn key={card.name} delay={i * 100}>
                 <div className="bg-white rounded-2xl shadow-card overflow-hidden group hover:shadow-elevated hover:-translate-y-1.5 transition-all duration-300 cursor-pointer">
                   <div className="relative h-40 sm:h-48 lg:h-56 overflow-hidden">
-                    <img src={card.banner} alt={card.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img
+                      src={card.banner}
+                      alt={card.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                     <div className="absolute bottom-3 left-4">
-                      <h3 className="font-bold text-white text-lg">{card.name}</h3>
+                      <h3 className="font-bold text-white text-lg">
+                        {card.name}
+                      </h3>
                     </div>
                   </div>
                   <div className="p-5">
                     <p className="text-sm text-surface-500">{card.tagline}</p>
                     <div className="flex items-center gap-0.5 mt-2">
-                      {[...Array(5)].map((_, j) => <Star key={j} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />)}
+                      {[...Array(5)].map((_, j) => (
+                        <Star
+                          key={j}
+                          className="w-3.5 h-3.5 fill-amber-400 text-amber-400"
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -258,8 +451,12 @@ export default function Landing({ onGetStarted, onDemo }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="text-center mb-14 lg:mb-20">
-              <p className="text-sm font-semibold text-primary-600 mb-2">HOW IT WORKS</p>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-surface-900">Three simple steps to your online shop</h2>
+              <p className="text-sm font-semibold text-primary-600 mb-2">
+                HOW IT WORKS
+              </p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-surface-900">
+                Three simple steps to your online shop
+              </h2>
             </div>
           </FadeIn>
           <div className="grid sm:grid-cols-3 gap-8 sm:gap-12 lg:gap-16">
@@ -274,9 +471,15 @@ export default function Landing({ onGetStarted, onDemo }) {
                       <div className="hidden sm:block flex-1 h-px bg-gradient-to-r from-surface-200 to-transparent" />
                     )}
                   </div>
-                  <div className="text-xs font-bold text-primary-600 mb-2 tracking-wider">STEP {i + 1}</div>
-                  <h3 className="text-xl font-bold text-surface-900 mb-3">{step.title}</h3>
-                  <p className="text-surface-500 leading-relaxed">{step.desc}</p>
+                  <div className="text-xs font-bold text-primary-600 mb-2 tracking-wider">
+                    STEP {i + 1}
+                  </div>
+                  <h3 className="text-xl font-bold text-surface-900 mb-3">
+                    {step.title}
+                  </h3>
+                  <p className="text-surface-500 leading-relaxed">
+                    {step.desc}
+                  </p>
                 </div>
               </FadeIn>
             ))}
@@ -289,8 +492,12 @@ export default function Landing({ onGetStarted, onDemo }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="text-center mb-14 lg:mb-20">
-              <p className="text-sm font-semibold text-primary-600 mb-2">FEATURES</p>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-surface-900">Everything you need to sell online</h2>
+              <p className="text-sm font-semibold text-primary-600 mb-2">
+                FEATURES
+              </p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-surface-900">
+                Everything you need to sell online
+              </h2>
             </div>
           </FadeIn>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
@@ -300,7 +507,9 @@ export default function Landing({ onGetStarted, onDemo }) {
                   <div className="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center text-primary-600 mb-5">
                     {f.icon}
                   </div>
-                  <h3 className="text-lg font-bold text-surface-900 mb-2">{f.title}</h3>
+                  <h3 className="text-lg font-bold text-surface-900 mb-2">
+                    {f.title}
+                  </h3>
                   <p className="text-surface-500 leading-relaxed">{f.desc}</p>
                 </div>
               </FadeIn>
@@ -314,9 +523,15 @@ export default function Landing({ onGetStarted, onDemo }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="text-center mb-10 lg:mb-14">
-              <p className="text-sm font-semibold text-primary-600 mb-2">LIVE DEMO</p>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-surface-900">See how your shop will look</h2>
-              <p className="text-surface-500 mt-3">Click "View Full Demo" to explore the complete shop experience</p>
+              <p className="text-sm font-semibold text-primary-600 mb-2">
+                LIVE DEMO
+              </p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-surface-900">
+                See how your shop will look
+              </h2>
+              <p className="text-surface-500 mt-3">
+                Click "View Full Demo" to explore the complete shop experience
+              </p>
             </div>
           </FadeIn>
           <FadeIn delay={100}>
@@ -331,20 +546,39 @@ export default function Landing({ onGetStarted, onDemo }) {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   <div className="absolute -bottom-10 left-6 w-20 h-20 rounded-2xl border-4 border-white shadow-card overflow-hidden bg-white">
-                    <img src="https://images.pexels.com/photos/1070880/pexels-photo-1070880.jpeg?auto=compress&cs=tinysrgb&w=200" alt="" className="w-full h-full object-cover" />
+                    <img
+                      src="https://images.pexels.com/photos/1070880/pexels-photo-1070880.jpeg?auto=compress&cs=tinysrgb&w=200"
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </div>
                 <div className="pt-14 px-6 pb-2">
-                  <h3 className="text-xl font-bold text-surface-900">Bakery Shop</h3>
-                  <p className="text-sm text-surface-500 mt-1">Fresh cakes & pastries daily</p>
+                  <h3 className="text-xl font-bold text-surface-900">
+                    Bakery Shop
+                  </h3>
+                  <p className="text-sm text-surface-500 mt-1">
+                    Fresh cakes & pastries daily
+                  </p>
                 </div>
                 <div className="px-5 py-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {demoProducts.map(p => (
-                    <div key={p.name} className="bg-surface-50 rounded-xl overflow-hidden group hover:shadow-card transition-all duration-200">
-                      <img src={p.image} alt={p.name} className="w-full h-24 sm:h-28 object-cover" />
+                  {demoProducts.map((p) => (
+                    <div
+                      key={p.name}
+                      className="bg-surface-50 rounded-xl overflow-hidden group hover:shadow-card transition-all duration-200"
+                    >
+                      <img
+                        src={p.image}
+                        alt={p.name}
+                        className="w-full h-24 sm:h-28 object-cover"
+                      />
                       <div className="p-2.5">
-                        <p className="text-xs font-semibold text-surface-900 truncate">{p.name}</p>
-                        <p className="text-xs font-bold text-primary-600 mt-0.5">₹{p.price}</p>
+                        <p className="text-xs font-semibold text-surface-900 truncate">
+                          {p.name}
+                        </p>
+                        <p className="text-xs font-bold text-primary-600 mt-0.5">
+                          ₹{p.price}
+                        </p>
                         <button className="w-full mt-2 py-1.5 text-[10px] font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-all active:scale-95">
                           Order
                         </button>
@@ -353,7 +587,10 @@ export default function Landing({ onGetStarted, onDemo }) {
                   ))}
                 </div>
                 <div className="px-5 pb-5">
-                  <button onClick={onDemo} className="w-full py-3 bg-primary-50 text-primary-700 font-semibold rounded-xl hover:bg-primary-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                  <button
+                    onClick={onDemo}
+                    className="w-full py-3 bg-primary-50 text-primary-700 font-semibold rounded-xl hover:bg-primary-100 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  >
                     View Full Demo <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -368,8 +605,12 @@ export default function Landing({ onGetStarted, onDemo }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="text-center mb-14 lg:mb-20">
-              <p className="text-sm font-semibold text-primary-600 mb-2">WHY DUKANLINK</p>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-surface-900">Built for real businesses</h2>
+              <p className="text-sm font-semibold text-primary-600 mb-2">
+                WHY DUKANLINK
+              </p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-surface-900">
+                Built for real businesses
+              </h2>
             </div>
           </FadeIn>
           <div className="grid sm:grid-cols-3 gap-8 lg:gap-16">
@@ -379,8 +620,12 @@ export default function Landing({ onGetStarted, onDemo }) {
                   <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center text-primary-600 mx-auto mb-6">
                     {b.icon}
                   </div>
-                  <h3 className="text-xl font-bold text-surface-900 mb-3">{b.title}</h3>
-                  <p className="text-surface-500 leading-relaxed max-w-sm mx-auto">{b.desc}</p>
+                  <h3 className="text-xl font-bold text-surface-900 mb-3">
+                    {b.title}
+                  </h3>
+                  <p className="text-surface-500 leading-relaxed max-w-sm mx-auto">
+                    {b.desc}
+                  </p>
                 </div>
               </FadeIn>
             ))}
@@ -393,8 +638,12 @@ export default function Landing({ onGetStarted, onDemo }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <FadeIn>
             <div className="text-center mb-14 lg:mb-20">
-              <p className="text-sm font-semibold text-primary-600 mb-2">PRICING</p>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-surface-900">Simple, transparent pricing</h2>
+              <p className="text-sm font-semibold text-primary-600 mb-2">
+                PRICING
+              </p>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-surface-900">
+                Simple, transparent pricing
+              </h2>
             </div>
           </FadeIn>
           <div className="grid sm:grid-cols-2 gap-6 lg:gap-8 max-w-3xl mx-auto">
@@ -402,14 +651,42 @@ export default function Landing({ onGetStarted, onDemo }) {
             <FadeIn>
               <div className="bg-white rounded-2xl shadow-card p-7 lg:p-10 border border-surface-200 h-full flex flex-col">
                 <h3 className="text-xl font-bold text-surface-900">Free</h3>
-                <p className="text-4xl font-extrabold text-surface-900 mt-4">₹0<span className="text-base font-medium text-surface-400">/month</span></p>
+                <p className="text-4xl font-extrabold text-surface-900 mt-4">
+                  ₹0
+                  <span className="text-base font-medium text-surface-400">
+                    /month
+                  </span>
+                </p>
                 <ul className="mt-8 space-y-4 text-surface-600 flex-1">
-                  <li className="flex items-center gap-3"><span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">✓</span> Up to 10 products</li>
-                  <li className="flex items-center gap-3"><span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">✓</span> WhatsApp ordering</li>
-                  <li className="flex items-center gap-3"><span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">✓</span> Mobile-optimized shop</li>
-                  <li className="flex items-center gap-3"><span className="w-5 h-5 bg-surface-100 rounded-full flex items-center justify-center text-surface-400 text-xs flex-shrink-0">—</span><span className="text-surface-400">Analytics</span></li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">
+                      ✓
+                    </span>{" "}
+                    Up to 10 products
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">
+                      ✓
+                    </span>{" "}
+                    WhatsApp ordering
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">
+                      ✓
+                    </span>{" "}
+                    Mobile-optimized shop
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-surface-100 rounded-full flex items-center justify-center text-surface-400 text-xs flex-shrink-0">
+                      —
+                    </span>
+                    <span className="text-surface-400">Analytics</span>
+                  </li>
                 </ul>
-                <button onClick={onGetStarted} className="w-full mt-8 py-3.5 bg-surface-100 text-surface-700 font-semibold rounded-xl hover:bg-surface-200 transition-all active:scale-[0.98]">
+                <button
+                  onClick={onGetStarted}
+                  className="w-full mt-8 py-3.5 bg-surface-100 text-surface-700 font-semibold rounded-xl hover:bg-surface-200 transition-all active:scale-[0.98]"
+                >
                   Get Started Free
                 </button>
               </div>
@@ -421,14 +698,42 @@ export default function Landing({ onGetStarted, onDemo }) {
                   POPULAR
                 </div>
                 <h3 className="text-xl font-bold text-surface-900">Pro</h3>
-                <p className="text-4xl font-extrabold text-surface-900 mt-4">₹199<span className="text-base font-medium text-surface-400">/month</span></p>
+                <p className="text-4xl font-extrabold text-surface-900 mt-4">
+                  ₹199
+                  <span className="text-base font-medium text-surface-400">
+                    /month
+                  </span>
+                </p>
                 <ul className="mt-8 space-y-4 text-surface-600 flex-1">
-                  <li className="flex items-center gap-3"><span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">✓</span> Unlimited products</li>
-                  <li className="flex items-center gap-3"><span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">✓</span> WhatsApp ordering</li>
-                  <li className="flex items-center gap-3"><span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">✓</span> Mobile-optimized shop</li>
-                  <li className="flex items-center gap-3"><span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">✓</span> Analytics dashboard</li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">
+                      ✓
+                    </span>{" "}
+                    Unlimited products
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">
+                      ✓
+                    </span>{" "}
+                    WhatsApp ordering
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">
+                      ✓
+                    </span>{" "}
+                    Mobile-optimized shop
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="w-5 h-5 bg-primary-50 rounded-full flex items-center justify-center text-primary-600 text-xs font-bold flex-shrink-0">
+                      ✓
+                    </span>{" "}
+                    Analytics dashboard
+                  </li>
                 </ul>
-                <button onClick={onGetStarted} className="w-full mt-8 py-3.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all active:scale-[0.98] shadow-soft">
+                <button
+                  onClick={onGetStarted}
+                  className="w-full mt-8 py-3.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all active:scale-[0.98] shadow-soft"
+                >
                   Start Pro Trial
                 </button>
               </div>
@@ -443,9 +748,16 @@ export default function Landing({ onGetStarted, onDemo }) {
         <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-accent-500/10 rounded-full blur-3xl" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <FadeIn>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-5">Start your shop today</h2>
-            <p className="text-lg sm:text-xl text-surface-400 mb-10">It takes less than 2 minutes</p>
-            <button onClick={onGetStarted} className="inline-flex items-center gap-2 px-8 py-4 bg-primary-600 text-white font-bold text-lg rounded-xl hover:bg-primary-700 transition-all active:scale-95 shadow-elevated">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-5">
+              Start your shop today
+            </h2>
+            <p className="text-lg sm:text-xl text-surface-400 mb-10">
+              It takes less than 2 minutes
+            </p>
+            <button
+              onClick={onGetStarted}
+              className="inline-flex items-center gap-2 px-8 py-4 bg-primary-600 text-white font-bold text-lg rounded-xl hover:bg-primary-700 transition-all active:scale-95 shadow-elevated"
+            >
               Get Started Free <ArrowRight className="w-5 h-5" />
             </button>
           </FadeIn>
@@ -463,19 +775,65 @@ export default function Landing({ onGetStarted, onDemo }) {
               <span className="font-bold text-white text-lg">DukanLink</span>
             </div>
             <div className="flex items-center gap-6 text-sm font-medium">
-              <a href="#" className="hover:text-white transition-colors">About</a>
-              <a href="#" className="hover:text-white transition-colors">Contact</a>
-              <a href="#" className="hover:text-white transition-colors">Privacy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms</a>
+              <a href="#" className="hover:text-white transition-colors">
+                About
+              </a>
+              <a href="#" className="hover:text-white transition-colors">
+                Contact
+              </a>
+              <a href="#" className="hover:text-white transition-colors">
+                Privacy
+              </a>
+              <a href="#" className="hover:text-white transition-colors">
+                Terms
+              </a>
             </div>
             <div className="flex items-center gap-3">
-              <a href="#" className="w-9 h-9 bg-surface-800 rounded-lg flex items-center justify-center hover:bg-surface-700 transition-colors" aria-label="Twitter">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              <a
+                href="#"
+                className="w-9 h-9 bg-surface-800 rounded-lg flex items-center justify-center hover:bg-surface-700 transition-colors"
+                aria-label="Twitter"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
               </a>
-              <a href="#" className="w-9 h-9 bg-surface-800 rounded-lg flex items-center justify-center hover:bg-surface-700 transition-colors" aria-label="Instagram">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>
+              <a
+                href="#"
+                className="w-9 h-9 bg-surface-800 rounded-lg flex items-center justify-center hover:bg-surface-700 transition-colors"
+                aria-label="Instagram"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="2" y="2" width="20" height="20" rx="5" />
+                  <circle cx="12" cy="12" r="5" />
+                  <circle
+                    cx="17.5"
+                    cy="6.5"
+                    r="1.5"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                </svg>
               </a>
-              <a href="#" className="w-9 h-9 bg-surface-800 rounded-lg flex items-center justify-center hover:bg-surface-700 transition-colors" aria-label="WhatsApp">
+              <a
+                href="#"
+                className="w-9 h-9 bg-surface-800 rounded-lg flex items-center justify-center hover:bg-surface-700 transition-colors"
+                aria-label="WhatsApp"
+              >
                 <MessageCircle className="w-4 h-4" />
               </a>
             </div>

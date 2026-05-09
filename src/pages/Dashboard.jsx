@@ -1,5 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import useSEO from "../hooks/useSEO";
+import { PAGE_SEO } from "../lib/seo";
 import { CopyButton } from "../components/UI";
 import {
   Settings,
@@ -15,15 +17,24 @@ import {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { shop, products, shopLoading, FREE_PRODUCT_LIMIT } = useApp();
+
+  // Set SEO metadata for Dashboard page
+  useSEO({
+    ...PAGE_SEO.dashboard,
+    canonicalUrl: "https://dukanlink.com/dashboard",
+  });
+
   const shopUrl = `dukanlink.in/${shop?.slug || "myshop"}`;
   const isPremium = shop?.plan === "premium";
 
   // Calculate real statistics from products
-  const totalInventoryValue = products.reduce((sum, product) => sum + (product.price || 0), 0);
-  const averageProductPrice = products.length > 0
-    ? Math.round(totalInventoryValue / products.length)
-    : 0;
-  
+  const totalInventoryValue = products.reduce(
+    (sum, product) => sum + (product.price || 0),
+    0,
+  );
+  const averageProductPrice =
+    products.length > 0 ? Math.round(totalInventoryValue / products.length) : 0;
+
   const stats = [
     {
       label: "Inventory Value",
@@ -41,7 +52,9 @@ export default function Dashboard() {
     },
     {
       label: "Categories",
-      value: String([...new Set(products.map(p => p.category).filter(Boolean))].length),
+      value: String(
+        [...new Set(products.map((p) => p.category).filter(Boolean))].length,
+      ),
       icon: <ShoppingBag className="w-5 h-5" />,
       color: "text-amber-600 bg-amber-50",
       sub: products.length > 0 ? "Unique categories" : "No categories",
@@ -50,7 +63,10 @@ export default function Dashboard() {
       label: "Shop Status",
       value: shop?.status === "active" ? "Active" : "Inactive",
       icon: <TrendingUp className="w-5 h-5" />,
-      color: shop?.status === "active" ? "text-teal-600 bg-teal-50" : "text-surface-500 bg-surface-100",
+      color:
+        shop?.status === "active"
+          ? "text-teal-600 bg-teal-50"
+          : "text-surface-500 bg-surface-100",
       sub: isPremium ? "Premium Plan" : "Free Plan",
     },
   ];
@@ -87,7 +103,7 @@ export default function Dashboard() {
           </div>
         </div>
         <button
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate("/settings")}
           className="p-2.5 rounded-xl hover:bg-surface-100 transition-colors text-surface-500 hover:text-primary-600"
           title="Settings"
         >
