@@ -3,14 +3,14 @@
  */
 
 export const SEO_CONFIG = {
-  baseUrl: "https://dukanlink.com",
+  baseUrl: "https://dukanlink.vercel.app",
   siteName: "DukanLink",
-  defaultTitle: "DukanLink - Your Shop, One Link Away",
+  defaultTitle: "DukanLink - Free Online Shop Builder",
   defaultDescription:
     "Create your free online shop in seconds. No coding required. Get orders directly on WhatsApp. Perfect for small businesses, startups, and resellers.",
   defaultKeywords:
     "online shop, WhatsApp shop, ecommerce, small business, free shop, digital store, no coding",
-  defaultImage: "https://dukanlink.com/og-image.png",
+  defaultImage: "https://dukanlink.vercel.app/og-image.png",
   twitterHandle: "@DukanLink",
 };
 
@@ -118,5 +118,12 @@ export const PAGE_SEO = {
     title: "Admin Panel - DukanLink",
     description: "Manage DukanLink platform from the admin panel.",
     keywords: "admin, platform management",
+  },
+  productPreview: {
+    title: "Product Details - DukanHub",
+    description:
+      "View product details and order directly on WhatsApp. AI-powered WhatsApp store builder for local businesses.",
+    keywords:
+      "WhatsApp store builder, AI WhatsApp store builder, receive orders on WhatsApp, WhatsApp order management system, sell on WhatsApp online store, online catalog maker for WhatsApp, automated WhatsApp ordering system, WhatsApp commerce for small business, no code online store builder, launch online store without coding, AI powered digital storefront, create online shop for local business, easy ecommerce platform for small business, local business ecommerce solutions, set up digital dukaan online, small business online ordering system, local retail ecommerce platform, create digital storefront local business",
   },
 };

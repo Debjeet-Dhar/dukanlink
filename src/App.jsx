@@ -22,6 +22,7 @@ import DemoShop from "./pages/DemoShop";
 import Admin from "./pages/Admin";
 import AdminAccess from "./pages/AdminAccess";
 import PublicShop from "./pages/PublicShop";
+import ProductPreview from "./pages/ProductPreview";
 import { Loader2 } from "./components/Icons";
 
 function AuthLayout() {
@@ -90,6 +91,10 @@ function AppShell() {
       />
       <Route path="/login" element={<Login onBack={() => navigate("/")} />} />
       <Route path="/demo" element={<DemoShop onBack={() => navigate("/")} />} />
+      <Route
+        path="/shop/:slug/product/:productId"
+        element={<ProductPreview />}
+      />
       <Route path="/shop/:slug" element={<PublicShop />} />
       <Route
         path="/admin"
